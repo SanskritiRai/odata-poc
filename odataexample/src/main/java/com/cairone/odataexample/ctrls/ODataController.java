@@ -15,8 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.cairone.odataexample.OdataexampleEdmProvider;
-import com.cairone.odataexample.OdataexampleEntityCollectionProcessor;
-import com.cairone.odataexample.OdataexampleEntityProcessor;
+import com.cairone.odataexample.PaisOdataEntityProcessor;
 
 @Component
 public class ODataController extends HttpServlet {
@@ -24,9 +23,8 @@ public class ODataController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
 	@Autowired private OdataexampleEdmProvider odataexampleEdmProvider = null;
-	@Autowired private OdataexampleEntityProcessor odataexampleEntityProcessor = null;
-	@Autowired private OdataexampleEntityCollectionProcessor odataexampleEntityCollectionProcessor = null;
-
+	@Autowired private PaisOdataEntityProcessor paisOdataEntityProcessor = null;
+	
 	public void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse) throws ServletException {
 		
 		try {
@@ -35,10 +33,8 @@ public class ODataController extends HttpServlet {
 			ServiceMetadata edm = odata.createServiceMetadata(odataexampleEdmProvider, new ArrayList<EdmxReference>());
 			
 			ODataHttpHandler handler = odata.createHandler(edm);
-			
-			handler.register(odataexampleEntityCollectionProcessor);
-			handler.register(odataexampleEntityProcessor);
-			
+	
+			handler.register(paisOdataEntityProcessor);
 			handler.process(servletRequest, servletResponse);
 			
 		} catch (RuntimeException e) {
