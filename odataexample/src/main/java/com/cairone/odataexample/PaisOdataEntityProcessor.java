@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.olingo.commons.api.data.ContextURL;
+import org.apache.olingo.commons.api.data.ContextURL.Suffix;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.data.Property;
@@ -95,8 +96,17 @@ public class PaisOdataEntityProcessor implements EntityProcessor, PrimitiveProce
 			entity.setId(createId("Paises", paisEntity.getId()));
 			
 			EdmEntityType entityType = edmEntitySet.getEntityType();
-
-		    ContextURL contextUrl = ContextURL.with().entitySet(edmEntitySet).build();
+			
+		    ContextURL contextUrl = null;
+			try {
+				contextUrl = ContextURL.with()
+						.serviceRoot(new URI(OdataexampleEdmProvider.SERVICE_ROOT))
+						.entitySet(edmEntitySet)
+						.suffix(Suffix.ENTITY)
+						.build();
+			} catch (URISyntaxException e) {
+				throw new ODataApplicationException(e.getMessage(), HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+			}
 		    EntitySerializerOptions options = EntitySerializerOptions.with().contextURL(contextUrl).build();
 
 		    ODataSerializer serializer = odata.createSerializer(responseFormat);
@@ -129,7 +139,7 @@ public class PaisOdataEntityProcessor implements EntityProcessor, PrimitiveProce
 		
 		Integer paisId = Integer.valueOf(propertyId.getValue().toString());
 		String paisNombre = propertyNombre.getValue().toString();
-		Integer paisPrefijo = Integer.valueOf(propertyPrefijo.getValue().toString());
+		Integer paisPrefijo = propertyPrefijo == null || propertyPrefijo.getValue() == null ? null : Integer.valueOf(propertyPrefijo.getValue().toString());
 		
 		PaisFrmDto paisFrmDto = new PaisFrmDto(paisId, paisNombre, paisPrefijo);
 		
@@ -154,14 +164,27 @@ public class PaisOdataEntityProcessor implements EntityProcessor, PrimitiveProce
 			.addProperty(new Property(null, "prefijo", ValueType.PRIMITIVE, paisEntity.getPrefijo()));
 		createdEntity.setId(createId("Paises", paisEntity.getId()));
 		
-		ContextURL contextUrl = ContextURL.with().entitySet(edmEntitySet).build();
+
+	    ContextURL contextUrl = null;
+		try {
+			contextUrl = ContextURL.with()
+					.serviceRoot(new URI(OdataexampleEdmProvider.SERVICE_ROOT))
+					.entitySet(edmEntitySet)
+					.suffix(Suffix.ENTITY)
+					.build();
+		} catch (URISyntaxException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+		}
 		EntitySerializerOptions options = EntitySerializerOptions.with().contextURL(contextUrl).build();
 		
 		ODataSerializer serializer = this.odata.createSerializer(responseFormat);
 		SerializerResult serializedResponse = serializer.entity(serviceMetadata, edmEntityType, createdEntity, options);
+
+		final String location = request.getRawBaseUri() + '/' + odata.createUriHelper().buildCanonicalURL(edmEntitySet, createdEntity);
 		
 		response.setContent(serializedResponse.getContent());
 		response.setStatusCode(HttpStatusCode.CREATED.getStatusCode());
+		response.setHeader(HttpHeader.LOCATION, location);
 		response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
 	}
 
@@ -361,7 +384,12 @@ public class PaisOdataEntityProcessor implements EntityProcessor, PrimitiveProce
 		UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
 		
 		EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
-		
+		EdmEntityType edmEntityType = edmEntitySet.getEntityType();
+        
+        if(!edmEntityType.getName().equals("Pais")) {
+        	return;
+        }
+        
 		EntityCollection data = new EntityCollection();
 		List<Entity> result = data.getEntities();
 		
@@ -376,9 +404,16 @@ public class PaisOdataEntityProcessor implements EntityProcessor, PrimitiveProce
 		
 		ODataSerializer serializer = odata.createSerializer(responseFormat);
 
-		EdmEntityType edmEntityType = edmEntitySet.getEntityType();
-		ContextURL contextUrl = ContextURL.with().entitySet(edmEntitySet).build();
-
+	    ContextURL contextUrl = null;
+		try {
+			contextUrl = ContextURL.with()
+					.serviceRoot(new URI(OdataexampleEdmProvider.SERVICE_ROOT))
+					.entitySet(edmEntitySet)
+					.build();
+		} catch (URISyntaxException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+		}
+		
 		final String id = request.getRawBaseUri() + "/" + edmEntitySet.getName();
 		EntityCollectionSerializerOptions opts = EntityCollectionSerializerOptions.with().id(id).contextURL(contextUrl).build();
 		SerializerResult serializerResult = serializer.entityCollection(serviceMetadata, edmEntityType, data, opts);
