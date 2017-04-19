@@ -1,11 +1,18 @@
 package com.cairone.odataexample;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
@@ -26,7 +33,10 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 
+import com.cairone.odataexample.annotations.EdmEntity;
 import com.cairone.odataexample.annotations.EdmEntitySet;
+import com.cairone.odataexample.annotations.EdmNavigationProperty;
+import com.cairone.odataexample.annotations.EdmProperty;
 
 @Component
 public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
@@ -38,36 +48,72 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 	public static final String SERVICE_ROOT = "http://localhost:8080/odata/appexample.svc/";
 	public static final String DEFAULT_EDM_PACKAGE = "com.cairone.odataexample.edm.resources";
 	
+	private HashMap<String, Class<?>> classesMap = new HashMap<String, Class<?>>();
+	private HashMap<String, String> entityTypesMap = new HashMap<>();
+
 	@Override
-	public CsdlEntityContainer getEntityContainer() throws ODataException {
-		
+	public List<CsdlSchema> getSchemas() throws ODataException {
+
 		ClassPathScanningCandidateComponentProvider provider = createComponentScanner(EdmEntitySet.class);
 		Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(DEFAULT_EDM_PACKAGE);
 		
-		FullQualifiedName CONTAINER = getFullQualifiedName(CONTAINER_NAME);
-		
-		// create EntitySets
-		List<CsdlEntitySet> entitySets = new ArrayList<CsdlEntitySet>();
-		
-		beanDefinitions.forEach(beanDef -> {
-			
-			logger.info("EDM: {}", beanDef.getBeanClassName());
-			
-			try {
+		try {
+			for(BeanDefinition beanDef : beanDefinitions) {
 				Class<?> cl = Class.forName(beanDef.getBeanClassName());
+				
 				EdmEntitySet edmEntitySet = cl.getAnnotation(EdmEntitySet.class);
+				EdmEntity edmEntity = cl.getAnnotation(EdmEntity.class);
 				
 				if(edmEntitySet.includedInServiceDocument()) {
-					entitySets.add(getEntitySet(CONTAINER, edmEntitySet.name()));
+					classesMap.put(edmEntitySet.value(), cl);
+					entityTypesMap.put(edmEntity.name(), edmEntitySet.value());
 				}
-			} catch (ClassNotFoundException | ODataException e) {
-				logger.error(e.getMessage());
-			}			
-		});
+			}
+		} catch (ClassNotFoundException e) {
+			logger.error(e.getMessage());
+		}
 		
-		//entitySets.add(getEntitySet(CONTAINER, "Paises"));
-		//entitySets.add(getEntitySet(CONTAINER, "Provincias"));
+		// create Schema
+		CsdlSchema schema = new CsdlSchema();
+		schema.setNamespace(NAME_SPACE);
 
+		// add EntityTypes
+		List<CsdlEntityType> entityTypes = new ArrayList<CsdlEntityType>();
+		
+		for(Map.Entry<String, Class<?>> entry : classesMap.entrySet()) {
+			Class<?> clazz = entry.getValue();
+			EdmEntity edmEntity = clazz.getAnnotation(EdmEntity.class);
+			entityTypes.add(getEntityType(getFullQualifiedName(edmEntity.name())));
+		}
+		
+		schema.setEntityTypes(entityTypes);
+		
+		//FIXME
+		// Para enumeraciones: http://stackoverflow.com/questions/36056649/how-to-create-an-enum-entity-type-in-olingo-odata-v4-java-api
+		//schema.setEnumTypes(enumTypes);
+		
+		// add EntityContainer
+		schema.setEntityContainer(getEntityContainer());
+
+		// finally
+		List<CsdlSchema> schemas = new ArrayList<CsdlSchema>();
+		schemas.add(schema);
+
+		return schemas;
+	}
+
+	@Override
+	public CsdlEntityContainer getEntityContainer() throws ODataException {
+
+		FullQualifiedName CONTAINER = getFullQualifiedName(CONTAINER_NAME);
+		
+		List<CsdlEntitySet> entitySets = new ArrayList<CsdlEntitySet>();
+		
+		for(Map.Entry<String, Class<?>> entry : classesMap.entrySet()) {
+			String entitySet = entry.getKey();
+			entitySets.add(getEntitySet(CONTAINER, entitySet));
+		}
+		
 		// create EntityContainer
 		CsdlEntityContainer entityContainer = new CsdlEntityContainer();
 		entityContainer.setName(CONTAINER_NAME);
@@ -92,129 +138,143 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 
 	    return null;
 	}
-
+	
 	@Override
 	public CsdlEntitySet getEntitySet(FullQualifiedName entityContainer, String entitySetName) throws ODataException {
 		
-		FullQualifiedName CONTAINER = getFullQualifiedName(CONTAINER_NAME);
+		Class<?> clazz = classesMap.get(entitySetName);
+		EdmEntity edmEntity = clazz.getAnnotation(EdmEntity.class);
 		
-		if(entityContainer.equals(CONTAINER)){
-			
-			if(entitySetName.equals("Paises")){
-				CsdlEntitySet entitySet = new CsdlEntitySet();
-				entitySet.setName("Paises");
-				entitySet.setType(getFullQualifiedName("Pais"));
+		CsdlEntitySet entitySet = new CsdlEntitySet();
+		entitySet.setName(entitySetName);
+		entitySet.setType(getFullQualifiedName(edmEntity.namespace(), edmEntity.name()));
 
-				return entitySet;
-			}
+		return entitySet;
+	}
+	
+	private List<CsdlNavigationProperty> getCsdlNavigationProperties(Field[] fields) {
+		
+		List<CsdlNavigationProperty> csdlNavigationProperties = new ArrayList<CsdlNavigationProperty>();
+		
+		for (Field fld : fields) {
 			
-			if(entitySetName.equals("Provincias")){
-				CsdlEntitySet entitySet = new CsdlEntitySet();
-				entitySet.setName("Provincias");
-				entitySet.setType(getFullQualifiedName("Provincia"));
+			EdmNavigationProperty navigationProperty = fld.getAnnotation(EdmNavigationProperty.class);
+			if(navigationProperty != null) {
 				
-				return entitySet;
+				String navigationPropertyTypeName = navigationProperty.type().isEmpty() ? null : navigationProperty.type();
+				boolean isCollection = false;
+				
+				if(navigationPropertyTypeName == null) {
+					Class<?> fieldClass = fld.getType();
+					
+					if(Collection.class.isAssignableFrom(fieldClass)) {
+						isCollection = true;
+						Type type = fld.getGenericType();
+						if (type instanceof ParameterizedType) {
+							ParameterizedType pt = (ParameterizedType) type;
+							for(Type t : pt.getActualTypeArguments()) {
+								Class<?> clazz = (Class<?>) t;
+								EdmEntity edmEntity = clazz.getAnnotation(EdmEntity.class);
+								navigationPropertyTypeName = edmEntity == null ? null : edmEntity.name();
+							}
+						}						
+					} else {
+						EdmEntity edmEntity = fieldClass.getAnnotation(EdmEntity.class);
+						navigationPropertyTypeName = edmEntity == null ? null : edmEntity.name();
+					}
+				}
+				
+				CsdlNavigationProperty csdlNavigationProperty = new CsdlNavigationProperty()
+			        .setName(navigationProperty.name())
+			        .setType(getFullQualifiedName(navigationPropertyTypeName))
+			        .setCollection(isCollection)
+			        .setNullable(navigationProperty.nullable());
+				
+				if(!navigationProperty.partner().isEmpty()) {
+					csdlNavigationProperty.setPartner(navigationProperty.partner());
+				}
+				
+				csdlNavigationProperties.add(csdlNavigationProperty);
 			}
 		}
-
-		return null;
+		
+		return csdlNavigationProperties;
+	}
+	
+	private List<CsdlProperty> getCsdlProperties(Field[] fields) {
+		
+		List<CsdlProperty> csdlProperties = new ArrayList<CsdlProperty>();
+		
+		for (Field fld : fields) {
+			
+			EdmProperty property = fld.getAnnotation(EdmProperty.class);
+			if(property != null) {
+				
+				String propertyName = property.name().isEmpty() ? fld.getName() : property.name();
+				FullQualifiedName propertyType = null;
+				
+				if(property.type().isEmpty()) {					
+					if(fld.getType().isAssignableFrom(Integer.class)) {
+						propertyType = EdmPrimitiveTypeKind.Int32.getFullQualifiedName();
+					} else if(fld.getType().isAssignableFrom(String.class)) {
+						propertyType = EdmPrimitiveTypeKind.String.getFullQualifiedName();
+					} else if(fld.getType().isAssignableFrom(LocalDate.class)) {
+						propertyType = EdmPrimitiveTypeKind.Date.getFullQualifiedName();
+					}
+				} else {
+					switch(property.type()) {
+					case "Edm.Int32":
+						propertyType = EdmPrimitiveTypeKind.Int32.getFullQualifiedName();
+						break;
+					case "Edm.String":
+						propertyType = EdmPrimitiveTypeKind.String.getFullQualifiedName();
+						break;
+					case "Edm.Date":
+						propertyType = EdmPrimitiveTypeKind.Date.getFullQualifiedName();
+						break;
+					}
+				}
+				
+				CsdlProperty csdlProperty = new CsdlProperty().setName(propertyName).setType(propertyType);
+				csdlProperties.add(csdlProperty);
+			}
+		}
+		
+		return csdlProperties;
 	}
 	
 	@Override
 	public CsdlEntityType getEntityType(FullQualifiedName entityTypeName) throws ODataException {
 		
-		// this method is called for one of the EntityTypes that are configured in the Schema
+		String entityTypeNameString = entityTypeName.getName();
+		String entitySetName = entityTypesMap.get(entityTypeNameString);
 		
-		FullQualifiedName fqnPais = getFullQualifiedName("Pais");
-		FullQualifiedName fqnProvincia = getFullQualifiedName("Provincia");
-		
-		if(entityTypeName.equals(fqnPais)) {
-			return createEntityTypePais();
-		}
+		Class<?> clazz = classesMap.get(entitySetName);
+		EdmEntity edmEntity = clazz.getAnnotation(EdmEntity.class);
 
-		if(entityTypeName.equals(fqnProvincia)) {
-			return createEntityTypeProvincia();
-		}
+		logger.info("EdmEntity: {}", edmEntity.name());
 		
-		return null;
+		Field[] fields = clazz.getDeclaredFields();
+		
+		List<CsdlProperty> csdlProperties = getCsdlProperties(fields);
+		List<CsdlNavigationProperty> csdlNavigationProperties = getCsdlNavigationProperties(fields);
+		List<CsdlPropertyRef> csdlPropertyRefs = Arrays.asList(edmEntity.key()).stream().map(key -> new CsdlPropertyRef().setName(key)).collect(Collectors.toList());
+		
+		CsdlEntityType entityType = new CsdlEntityType()
+			.setName(edmEntity.name())
+    		.setProperties(csdlProperties)
+    		.setKey(csdlPropertyRefs)
+    		.setNavigationProperties(csdlNavigationProperties);
+
+		return entityType;
 	}
 
-	@Override
-	public List<CsdlSchema> getSchemas() throws ODataException {
-		
-		// create Schema
-		CsdlSchema schema = new CsdlSchema();
-		schema.setNamespace(NAME_SPACE);
-
-		// add EntityTypes
-		List<CsdlEntityType> entityTypes = new ArrayList<CsdlEntityType>();
-		entityTypes.add(getEntityType(getFullQualifiedName("Pais")));
-		entityTypes.add(getEntityType(getFullQualifiedName("Provincia")));
-		
-		schema.setEntityTypes(entityTypes);
-
-		// add EntityContainer
-		schema.setEntityContainer(getEntityContainer());
-
-		// finally
-		List<CsdlSchema> schemas = new ArrayList<CsdlSchema>();
-		schemas.add(schema);
-
-		return schemas;
-	}
-
-	private CsdlEntityType createEntityTypePais() {
-
-		//create EntityType properties
-		CsdlProperty propertyId = new CsdlProperty().setName("id").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
-		CsdlProperty propertyNombre = new CsdlProperty().setName("nombre").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
-		CsdlProperty propertyPrefijo = new CsdlProperty().setName("prefijo").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
-
-		// create CsdlPropertyRef for Key element
-	    CsdlPropertyRef propertyRef = new CsdlPropertyRef().setName("id");
-
-		CsdlNavigationProperty navPropProvincias = new CsdlNavigationProperty()
-            .setName("Provincias")
-            .setType(getFullQualifiedName("Provincia"))
-            .setCollection(true)
-            .setPartner("Pais");
-		
-	    // configure EntityType
-	    CsdlEntityType entityType = new CsdlEntityType()
-		    .setName("Pais")
-		    .setProperties(Arrays.asList(propertyId, propertyNombre , propertyPrefijo))
-		    .setKey(Collections.singletonList(propertyRef))
-		    .setNavigationProperties(Arrays.asList(navPropProvincias));
-
-	    return entityType;
+	private FullQualifiedName getFullQualifiedName(String namespace, String name) {
+		return new FullQualifiedName(namespace, name);
 	}
 	
-	private CsdlEntityType createEntityTypeProvincia() {
-
-		CsdlProperty propertyId = new CsdlProperty().setName("id").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
-		CsdlProperty propertyPaisId = new CsdlProperty().setName("paisId").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
-		CsdlProperty propertyNombre = new CsdlProperty().setName("nombre").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
-		
-		CsdlNavigationProperty navPropPais = new CsdlNavigationProperty()
-            .setName("Pais")
-            .setType(getFullQualifiedName("Pais"))
-            .setNullable(false)
-            .setPartner("Provincias");
-
-	    CsdlPropertyRef propertyRefId = new CsdlPropertyRef().setName("id");
-	    CsdlPropertyRef propertyRefPaisId = new CsdlPropertyRef().setName("paisId");
-
-	    CsdlEntityType entityType = new CsdlEntityType()
-		    .setName("Provincia")
-		    .setProperties(Arrays.asList(propertyId, propertyPaisId, propertyNombre))
-		    .setKey(Arrays.asList(propertyRefId, propertyRefPaisId))
-		    .setNavigationProperties(Arrays.asList(navPropPais));
-
-	    return entityType;
-	}
-
 	private FullQualifiedName getFullQualifiedName(String name) {
-		return new FullQualifiedName(NAME_SPACE, name);
+		return getFullQualifiedName(NAME_SPACE, name);
 	}
 	
 	private ClassPathScanningCandidateComponentProvider createComponentScanner(Class<? extends Annotation> annotationType) {
