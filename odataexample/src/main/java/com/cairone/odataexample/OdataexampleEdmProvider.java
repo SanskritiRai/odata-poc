@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.CsdlAbstractEdmProvider;
@@ -59,8 +61,8 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 	private HashMap<String, Class<?>> enumsMap = new HashMap<String, Class<?>>();
 	private HashMap<String, String> entityTypesMap = new HashMap<>();
 	
-	@Override
-	public List<CsdlSchema> getSchemas() throws ODataException {
+	@PostConstruct
+	public void init() {
 
 		ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(EdmEntitySet.class, EdmEnum.class));
 		Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(DEFAULT_EDM_PACKAGE);
@@ -89,6 +91,10 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 		} catch (ClassNotFoundException e) {
 			logger.error(e.getMessage());
 		}
+	}
+	
+	@Override
+	public List<CsdlSchema> getSchemas() throws ODataException {
 		
 		// create Schema
 		CsdlSchema schema = new CsdlSchema();
