@@ -54,7 +54,7 @@ import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
 
 @Component
-public class PaisOdataEntityProcessor implements EntityProcessor, PrimitiveProcessor, EntityCollectionProcessor {
+public class OdataexampleEntityProcessor implements EntityProcessor, PrimitiveProcessor, EntityCollectionProcessor {
 
 	private OData odata;
 	private ServiceMetadata serviceMetadata;

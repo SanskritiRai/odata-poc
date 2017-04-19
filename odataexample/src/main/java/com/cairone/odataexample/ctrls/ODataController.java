@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.cairone.odataexample.OdataexampleEdmProvider;
-import com.cairone.odataexample.PaisOdataEntityProcessor;
+import com.cairone.odataexample.OdataexampleEntityProcessor;
 
 @Component 
 public class ODataController extends HttpServlet {
@@ -23,7 +23,7 @@ public class ODataController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
 	@Autowired private OdataexampleEdmProvider odataexampleEdmProvider = null;
-	@Autowired private PaisOdataEntityProcessor paisOdataEntityProcessor = null;
+	@Autowired private OdataexampleEntityProcessor paisOdataEntityProcessor = null;
 	
 	public void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse) throws ServletException {
 		

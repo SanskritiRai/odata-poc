@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,8 +35,8 @@ import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlPropertyRef;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.apache.olingo.commons.api.ex.ODataException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.olingo.commons.api.http.HttpStatusCode;
+import org.apache.olingo.server.api.ODataApplicationException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -50,8 +51,6 @@ import com.cairone.odataexample.annotations.EdmProperty;
 @Component
 public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 
-	public static Logger logger = LoggerFactory.getLogger(OdataexampleEdmProvider.class);
-	
 	public static final String NAME_SPACE = "com.cairone.odataexample";
 	public static final String CONTAINER_NAME = "ODataExample";
 	public static final String SERVICE_ROOT = "http://localhost:8080/odata/appexample.svc/";
@@ -62,7 +61,7 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 	private HashMap<String, String> entityTypesMap = new HashMap<>();
 	
 	@PostConstruct
-	public void init() {
+	public void init() throws ODataApplicationException {
 
 		ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(EdmEntitySet.class, EdmEnum.class));
 		Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(DEFAULT_EDM_PACKAGE);
@@ -89,7 +88,7 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 				}
 			}
 		} catch (ClassNotFoundException e) {
-			logger.error(e.getMessage());
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
 		}
 	}
 	
@@ -304,7 +303,6 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 					} else if(fld.getType().isAssignableFrom(Boolean.class)) {
 						propertyType = EdmPrimitiveTypeKind.Boolean.getFullQualifiedName();
 					} else {
-						logger.info("Campo: {}", fld.getName());
 						Class<?> enumClazz = fld.getType();
 						EdmEnum edmEnum = enumClazz.getAnnotation(EdmEnum.class);
 						if(edmEnum != null) {
@@ -375,8 +373,6 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 		Class<?> clazz = entitySetsMap.get(entitySetName);
 		EdmEntity edmEntity = clazz.getAnnotation(EdmEntity.class);
 
-		logger.info("EdmEntity: {}", edmEntity.name());
-		
 		Field[] fields = clazz.getDeclaredFields();
 		
 		List<CsdlProperty> csdlProperties = getCsdlProperties(fields);

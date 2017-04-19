@@ -10,10 +10,10 @@ import org.springframework.context.annotation.Bean;
 import com.cairone.odataexample.ctrls.ODataController;
 
 @SpringBootApplication
-public class OlingoOdataExample extends SpringBootServletInitializer
+public class OdataExample extends SpringBootServletInitializer
 {
     public static void main( String[] args ) {
-        SpringApplication.run(OlingoOdataExample.class, args);
+        SpringApplication.run(OdataExample.class, args);
     }
     
     @Autowired ODataController dispatcherServlet = null;
@@ -23,13 +23,4 @@ public class OlingoOdataExample extends SpringBootServletInitializer
     	ServletRegistrationBean registration = new ServletRegistrationBean(dispatcherServlet, "/odata/appexample.svc/*");
     	return registration;
     }
-    
-  
-    // *** SERA NECESARIO ????
-    /*
-    @Override
-	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
-    	return builder.sources(OlingoOdataExample.class);
-	}
-*/
 }
