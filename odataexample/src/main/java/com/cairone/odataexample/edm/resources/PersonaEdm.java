@@ -11,8 +11,6 @@ import com.cairone.odataexample.annotations.EdmNavigationProperty;
 import com.cairone.odataexample.annotations.EdmProperty;
 import com.cairone.odataexample.annotations.ODataJPAEntity;
 import com.cairone.odataexample.annotations.ODataJPAProperty;
-import com.cairone.odataexample.entities.PersonaEntity;
-import com.cairone.odataexample.enums.GeneroEnum;
 
 @EdmEntity(name = "Persona", key = { "tipoDocumentoId", "numeroDocumento" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Personas")
@@ -40,9 +38,8 @@ public class PersonaEdm {
 	@EdmProperty(name="fechaAlta")
 	private LocalDate fechaAlta = null;
 	
-	//FIXME
-	//@EdmProperty(name="genero")
-	private GeneroEnum genero = null;
+	@EdmProperty(name="genero")
+	private GeneroOdataEnum genero = null;
 	
 	@EdmNavigationProperty(name="sectores") @ODataJPAProperty("personaSectorEntities")
 	private List<PersonaSectorEdm> sectores = null;
@@ -51,7 +48,7 @@ public class PersonaEdm {
 		this.sectores = new ArrayList<PersonaSectorEdm>();
 	}
 
-	public PersonaEdm(Integer tipoDocumentoId, String numeroDocumento, String nombres, String apellidos, String apodo, LocalidadEdm localidad, LocalDate fechaAlta, GeneroEnum genero) {
+	public PersonaEdm(Integer tipoDocumentoId, String numeroDocumento, String nombres, String apellidos, String apodo, LocalidadEdm localidad, LocalDate fechaAlta, GeneroOdataEnum genero) {
 		super();
 		this.tipoDocumentoId = tipoDocumentoId;
 		this.numeroDocumento = numeroDocumento;
@@ -64,14 +61,6 @@ public class PersonaEdm {
 		this.sectores = new ArrayList<PersonaSectorEdm>();
 	}
 	
-	public PersonaEdm(PersonaEntity personaEntity) {
-		this(personaEntity.getTipoDocumento().getId(), personaEntity.getNumeroDocumento(), personaEntity.getNombres(), personaEntity.getApellidos(), personaEntity.getApodo(), new LocalidadEdm(personaEntity.getLocalidad()), personaEntity.getFechaAlta(), personaEntity.getGenero());
-		
-		if(personaEntity.getPersonaSectorEntities() != null) {
-			this.sectores = PersonaSectorEdm.crearLista(personaEntity.getPersonaSectorEntities());
-		}
-	}
-
 	public Integer getTipoDocumentoId() {
 		return tipoDocumentoId;
 	}
@@ -128,11 +117,11 @@ public class PersonaEdm {
 		this.fechaAlta = fechaAlta;
 	}
 
-	public GeneroEnum getGenero() {
+	public GeneroOdataEnum getGenero() {
 		return genero;
 	}
 
-	public void setGenero(GeneroEnum genero) {
+	public void setGenero(GeneroOdataEnum genero) {
 		this.genero = genero;
 	}
 

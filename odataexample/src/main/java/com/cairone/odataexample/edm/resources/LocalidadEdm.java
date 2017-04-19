@@ -7,7 +7,6 @@ import com.cairone.odataexample.annotations.EdmNavigationProperty;
 import com.cairone.odataexample.annotations.EdmProperty;
 import com.cairone.odataexample.annotations.ODataJPAEntity;
 import com.cairone.odataexample.annotations.ODataJPAProperty;
-import com.cairone.odataexample.entities.LocalidadEntity;
 
 @EdmEntity(name = "Localidad", key = { "paisId", "provinciaId", "localidadId" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Localidades")
@@ -46,10 +45,6 @@ public class LocalidadEdm {
 		this.nombre = nombre;
 		this.cp = cp;
 		this.prefijo = prefijo;
-	}
-
-	public LocalidadEdm(LocalidadEntity localidadEntity) {
-		this(localidadEntity.getId(), new ProvinciaEdm(localidadEntity.getProvincia()), localidadEntity.getNombre(), localidadEntity.getCp(), localidadEntity.getPrefijo());
 	}
 
 	public Integer getPaisId() {

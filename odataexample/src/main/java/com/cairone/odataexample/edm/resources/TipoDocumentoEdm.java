@@ -5,7 +5,6 @@ import com.cairone.odataexample.annotations.EdmEntity;
 import com.cairone.odataexample.annotations.EdmEntitySet;
 import com.cairone.odataexample.annotations.EdmProperty;
 import com.cairone.odataexample.annotations.ODataJPAEntity;
-import com.cairone.odataexample.entities.TipoDocumentoEntity;
 
 @EdmEntity(name = "TipoDocumento", key = { "id" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("TiposDocumentos")
@@ -28,12 +27,6 @@ public class TipoDocumentoEdm {
 		this.id = id;
 		this.nombre = nombre;
 		this.abreviatura = abreviatura;
-	}
-
-	public TipoDocumentoEdm(TipoDocumentoEntity tipoDocumentoEntity) {
-		this.id = tipoDocumentoEntity.getId();
-		this.nombre = tipoDocumentoEntity.getNombre();
-		this.abreviatura = tipoDocumentoEntity.getAbreviatura();
 	}
 
 	public Integer getId() {

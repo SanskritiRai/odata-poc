@@ -54,8 +54,7 @@ public @interface EdmEnum {
      *
      * @return The underlying type of the enum type.
      */
-    //FIXME
-    //PrimitiveType underlyingType() default PrimitiveType.INT32;
+    String underlyingType() default "Edm.Int32";
 
     /**
      * Indicates if this enum type represents a set of flags.
