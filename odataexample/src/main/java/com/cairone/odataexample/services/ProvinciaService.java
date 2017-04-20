@@ -15,7 +15,7 @@ import com.cairone.odataexample.entities.ProvinciaEntity;
 import com.cairone.odataexample.entities.ProvinciaPKEntity;
 import com.cairone.odataexample.repositories.PaisRepository;
 import com.cairone.odataexample.repositories.ProvinciaRepository;
-import com.querydsl.core.types.dsl.BooleanExpression;
+import com.mysema.query.types.expr.BooleanExpression;
 
 @Service
 public class ProvinciaService {

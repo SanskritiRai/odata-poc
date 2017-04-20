@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
 	<persistence-unit name="odataexample">
+		<class>com.cairone.odataexample.converters.GeneroConverter</class>
+		<class>com.cairone.odataexample.converters.LocalDateConverter</class>
+		<class>com.cairone.odataexample.entities.LocalidadEntity</class>
+		<class>com.cairone.odataexample.entities.LocalidadPKEntity</class>
 		<class>com.cairone.odataexample.entities.PaisEntity</class>
 		<class>com.cairone.odataexample.entities.PermisoEntity</class>
+		<class>com.cairone.odataexample.entities.PersonaEntity</class>
+		<class>com.cairone.odataexample.entities.PersonaPKEntity</class>
+		<class>com.cairone.odataexample.entities.PersonaSectorEntity</class>
+		<class>com.cairone.odataexample.entities.PersonaSectorPKEntity</class>
 		<class>com.cairone.odataexample.entities.ProvinciaEntity</class>
 		<class>com.cairone.odataexample.entities.ProvinciaPKEntity</class>
 		<class>com.cairone.odataexample.entities.SectorEntity</class>
 		<class>com.cairone.odataexample.entities.TipoDocumentoEntity</class>
+		<class>com.cairone.odataexample.entities.UsuarioEntity</class>
+		<class>com.cairone.odataexample.entities.UsuarioPKEntity</class>
+		<class>com.cairone.odataexample.entities.UsuarioPermisoEntity</class>
+		<class>com.cairone.odataexample.entities.UsuarioPermisoPKEntity</class>
 	</persistence-unit>
 </persistence>

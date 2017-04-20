@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.cairone.odataexample.dtos.PaisFrmDto;
 import com.cairone.odataexample.entities.PaisEntity;
 import com.cairone.odataexample.repositories.PaisRepository;
-import com.querydsl.core.types.dsl.BooleanExpression;
+import com.mysema.query.types.expr.BooleanExpression;
 
 @Service
 public class PaisService {
