@@ -1,10 +1,24 @@
 package com.cairone.odataexample;
 
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
 
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.ContextURL.Suffix;
@@ -16,6 +30,7 @@ import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
 import org.apache.olingo.commons.api.edm.EdmProperty;
+import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.ex.ODataRuntimeException;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
@@ -43,15 +58,20 @@ import org.apache.olingo.server.api.uri.UriResource;
 import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceProperty;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 
-import com.cairone.odataexample.dtos.PaisFrmDto;
+import com.cairone.odataexample.annotations.EdmEntity;
+import com.cairone.odataexample.annotations.EdmEnum;
 import com.cairone.odataexample.dtos.validators.PaisFrmDtoValidator;
 import com.cairone.odataexample.entities.PaisEntity;
+import com.cairone.odataexample.interfaces.DataSource;
+import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.PaisService;
-import com.cairone.odataexample.utils.SQLExceptionParser;
-import com.cairone.odataexample.utils.ValidatorUtil;
 
 @Component
 public class OdataexampleEntityProcessor implements EntityProcessor, PrimitiveProcessor, EntityCollectionProcessor {
@@ -59,16 +79,50 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 	private OData odata;
 	private ServiceMetadata serviceMetadata;
 	
+	private Map<String, DataSourceProvider> dataSourceProviderMap = new HashMap<>();
+	private Map<String, Class<?>> entitySetMap = new HashMap<>();
+	
 	@Autowired private PaisService paisService = null;
 	@Autowired private PaisFrmDtoValidator paisFrmDtoValidator = null;
 	
 	@Autowired
 	private MessageSource messageSource = null;
 	
+	@Autowired
+	private ApplicationContext context = null;
+	
 	@Override
 	public void init(OData odata, ServiceMetadata serviceMetadata) {
 		this.odata = odata;
 		this.serviceMetadata = serviceMetadata;
+	}
+	
+	@PostConstruct
+	public void init() throws ODataApplicationException {
+		
+		context.getBeansOfType(DataSourceProvider.class).entrySet()
+			.stream()
+			.forEach(entry -> {
+				DataSourceProvider dataSourceProvider = entry.getValue();
+				dataSourceProviderMap.put(dataSourceProvider.isSuitableFor(), dataSourceProvider);
+			});
+
+		ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(com.cairone.odataexample.annotations.EdmEntitySet.class));
+		Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(OdataexampleEdmProvider.DEFAULT_EDM_PACKAGE);
+
+		try {
+			for(BeanDefinition beanDef : beanDefinitions) {
+				Class<?> cl = Class.forName(beanDef.getBeanClassName());
+				
+				com.cairone.odataexample.annotations.EdmEntitySet edmEntitySet = cl.getAnnotation(com.cairone.odataexample.annotations.EdmEntitySet.class);
+				
+				if(edmEntitySet != null) {
+					entitySetMap.put(edmEntitySet.value(), cl);
+				}
+			}
+		} catch (ClassNotFoundException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
+		}
 	}
 
 	@Override
@@ -128,43 +182,87 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 	    EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
 		EdmEntityType edmEntityType = edmEntitySet.getEntityType();
 		
+		DataSourceProvider dataSourceProvider = dataSourceProviderMap.get(edmEntitySet.getName());
+		
+		if(dataSourceProvider == null) {
+			throw new ODataApplicationException(
+					String.format("DATASOURCE PROVIDER FOR %s NOT FOUND", edmEntitySet.getName()), 
+					HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), 
+					Locale.ENGLISH);
+		}
+		
+		DataSource dataSource = dataSourceProvider.getDataSource();
+		
 		InputStream requestInputStream = request.getBody();
 		ODataDeserializer deserializer = this.odata.createDeserializer(requestFormat);
 		DeserializerResult result = deserializer.entity(requestInputStream, edmEntityType);
 		Entity requestEntity = result.getEntity();
 		
-		Property propertyId = requestEntity.getProperty("id");
-		Property propertyNombre = requestEntity.getProperty("nombre");
-		Property propertyPrefijo = requestEntity.getProperty("prefijo");
+		Class<?> clazz = entitySetMap.get(edmEntitySet.getName());
+		Object object, createdObject;
 		
-		Integer paisId = Integer.valueOf(propertyId.getValue().toString());
-		String paisNombre = propertyNombre.getValue().toString();
-		Integer paisPrefijo = propertyPrefijo == null || propertyPrefijo.getValue() == null ? null : Integer.valueOf(propertyPrefijo.getValue().toString());
+    	EdmEntity edmEntity = clazz.getAnnotation(EdmEntity.class);
+    	String[] keys = edmEntity.key();
+    	Map<String, Object> keyValues = Arrays.asList(keys)
+    		.stream()
+    		.collect(Collectors.toMap(x -> x, x -> x));
+    	
+    	try {
+	    	
+			Constructor<?> constructor = clazz.getConstructor();
+			object = constructor.newInstance();
+	    	
+			for (Field fld : clazz.getDeclaredFields()) {
+				
+				com.cairone.odataexample.annotations.EdmProperty edmProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmProperty.class);
+				
+	            if (edmProperty != null) {
+	            	
+	            	String propertyName = edmProperty.name().isEmpty() ? fld.getName() : edmProperty.name();
+	            	Property property = requestEntity.getProperty(propertyName);
+	            		
+	            	fld.setAccessible(true);
+	            	fld.set(object, property.getValue());
+	            }
+			}
+    	
+    	} catch (IllegalArgumentException | IllegalAccessException | NoSuchMethodException | SecurityException | InstantiationException | InvocationTargetException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
+		}
+    	
+		Entity createdEntity = new Entity();
 		
-		PaisFrmDto paisFrmDto = new PaisFrmDto(paisId, paisNombre, paisPrefijo);
-		
-		try {
-			ValidatorUtil.validate(paisFrmDtoValidator, messageSource, paisFrmDto);
-		} catch (Exception e) {
-			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+		try
+		{
+	    	createdObject = dataSource.create(object);
+	    	for(Field fld : createdObject.getClass().getDeclaredFields()) {
+	    		
+	    		com.cairone.odataexample.annotations.EdmProperty edmProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmProperty.class);
+				
+	            if (edmProperty != null) {
+	            	
+	            	fld.setAccessible(true);
+	            	
+	            	String name = edmProperty.name().isEmpty() ? fld.getName() : edmProperty.name();
+	            	Object value = fld.get(createdObject);
+	            	createdEntity.addProperty(new Property(null, name, ValueType.PRIMITIVE, value));
+	            	
+	            	if(keyValues.containsKey(name)) {
+	            		keyValues.put(name, value);
+	            	}
+	            }
+	    	}
+		} catch(ODataException | IllegalArgumentException | IllegalAccessException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
 		}
 		
-		PaisEntity paisEntity;
-		
+		String entityID = keyValues.entrySet().stream().map(Entry::toString).collect(Collectors.joining(",", "(", ")"));
 		try {
-			paisEntity = paisService.nuevo(paisFrmDto);
-		} catch (Exception e) {
-			String message = SQLExceptionParser.parse(e);
-			throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+			createdEntity.setId(new URI(edmEntitySet.getName() + entityID));
+		} catch (URISyntaxException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
 		}
 		
-		Entity createdEntity = new Entity()
-			.addProperty(new Property(null, "id", ValueType.PRIMITIVE, paisEntity.getId()))
-			.addProperty(new Property(null, "nombre", ValueType.PRIMITIVE, paisEntity.getNombre()))
-			.addProperty(new Property(null, "prefijo", ValueType.PRIMITIVE, paisEntity.getPrefijo()));
-		createdEntity.setId(createId("Paises", paisEntity.getId()));
-		
-
 	    ContextURL contextUrl = null;
 		try {
 			contextUrl = ContextURL.with()
@@ -192,90 +290,92 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 	public void updateEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType requestFormat, ContentType responseFormat) throws ODataApplicationException, ODataLibraryException {
 		
 		List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
-		  
+		
 		UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
 		EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
 		EdmEntityType edmEntityType = edmEntitySet.getEntityType();
 
-		if(!edmEntityType.getName().equals("Pais")) {
-			return;
+		DataSourceProvider dataSourceProvider = dataSourceProviderMap.get(edmEntitySet.getName());
+		
+		if(dataSourceProvider == null) {
+			throw new ODataApplicationException(
+					String.format("DATASOURCE PROVIDER FOR %s NOT FOUND", edmEntitySet.getName()), 
+					HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), 
+					Locale.ENGLISH);
 		}
+		
+		DataSource dataSource = dataSourceProvider.getDataSource();
 		
 		InputStream requestInputStream = request.getBody();
 		ODataDeserializer deserializer = this.odata.createDeserializer(requestFormat);
 		DeserializerResult result = deserializer.entity(requestInputStream, edmEntityType);
 		Entity requestEntity = result.getEntity();
-		
+
 		List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
+		Map<String, UriParameter> keyPredicateMap = keyPredicates
+				.stream()
+				.collect(Collectors.toMap(UriParameter::getName, x -> x));
 		
-		HttpMethod httpMethod = request.getMethod();
+		Map<String, Property> propertyMap = requestEntity.getProperties()
+				.stream()
+				.collect(Collectors.toMap(Property::getName, x -> x));
 		
-		// ***
-		
-		UriParameter uriParameter = keyPredicates.get(0);
-    	Integer paisID = Integer.valueOf(uriParameter.getText());
+		Class<?> clazz = entitySetMap.get(edmEntitySet.getName());
+		Object object;
+
+    	try {
+	    	
+			Constructor<?> constructor = clazz.getConstructor();
+			object = constructor.newInstance();
+	    	
+			for (Field fld : clazz.getDeclaredFields()) {
+				
+				com.cairone.odataexample.annotations.EdmProperty edmProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmProperty.class);
+				
+	            if (edmProperty != null) {
+	            	
+	            	String propertyName = edmProperty.name().isEmpty() ? fld.getName() : edmProperty.name();
+	            	Property property = requestEntity.getProperty(propertyName);
+	            	
+	            	fld.setAccessible(true);
+	            	
+	            	if(keyPredicateMap.containsKey(propertyName)) {
+	            		String text = keyPredicateMap.get(propertyName).getText();
+	            		if(fld.getType().isAssignableFrom(Integer.class)) {
+	            			fld.set(object, Integer.valueOf(text));
+	            		} else if(fld.getType().isAssignableFrom(String.class)) {
+	            			fld.set(object, text);
+						} else if(fld.getType().isAssignableFrom(LocalDate.class)) {
+							fld.set(object, LocalDate.parse(text, DateTimeFormatter.ofPattern("yyyy-MMM-dd")));
+						} else if(fld.getType().isAssignableFrom(Boolean.class)) {
+							fld.set(object, text.trim().toUpperCase().equals("TRUE"));
+						} else {
+							Class<?> enumClazz = fld.getType();
+							EdmEnum edmEnum = enumClazz.getAnnotation(EdmEnum.class);
+							if(edmEnum != null) {
+								// FIXME QUE HACEMOS ?????
+							}
+						}
+	            	} else if(property != null) {
+	            		fld.set(object, property.getValue());
+	            	}
+	            }
+			}
     	
-    	PaisEntity paisEntity = paisService.buscarPorID(paisID);
-
-        if(paisEntity == null) {
-            throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
-        }
-        
-    	final Entity entity = new Entity()
-			.addProperty(new Property(null, "id", ValueType.PRIMITIVE, paisEntity.getId()))
-			.addProperty(new Property(null, "nombre", ValueType.PRIMITIVE, paisEntity.getNombre()))
-			.addProperty(new Property(null, "prefijo", ValueType.PRIMITIVE, paisEntity.getPrefijo()));
-		entity.setId(createId("Paises", paisEntity.getId()));
-		
-		List<Property> properties = entity.getProperties();
-		
-		for(Property property : properties) {
-			
-			 String propName = property.getName();
-			 
-			 if(edmEntityType.getKeyPredicateNames().contains(propName)) {
-			      continue;
-			 }
-			 
-			 Property updateProperty = requestEntity.getProperty(propName);
-			 if(updateProperty == null) {
-				 
-				 if(httpMethod.equals(HttpMethod.PATCH)){
-					 continue;
-				 }else if(httpMethod.equals(HttpMethod.PUT)){
-					 property.setValue(property.getValueType(), null);
-					 continue;
-				 }
-			 }
-			 
-			 property.setValue(property.getValueType(), updateProperty.getValue());
+    	} catch (IllegalArgumentException | IllegalAccessException | NoSuchMethodException | SecurityException | InstantiationException | InvocationTargetException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
 		}
-
-		Property propertyId = entity.getProperty("id");
-		Property propertyNombre = entity.getProperty("nombre");
-		Property propertyPrefijo = entity.getProperty("prefijo");
-		
-		Integer paisId = Integer.valueOf(propertyId.getValue().toString());
-		String paisNombre = propertyNombre.getValue().toString();
-		Integer paisPrefijo = Integer.valueOf(propertyPrefijo.getValue().toString());
-		
-		PaisFrmDto paisFrmDto = new PaisFrmDto(paisId, paisNombre, paisPrefijo);
-		
+    	
 		try {
-			ValidatorUtil.validate(paisFrmDtoValidator, messageSource, paisFrmDto);
-		} catch (Exception e) {
-			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-		}
-
-		try {
-			paisEntity = paisService.actualizar(paisFrmDto);
-		} catch (Exception e) {
-			String message = SQLExceptionParser.parse(e);
-			throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+			if(request.getMethod().equals(HttpMethod.PUT)) {
+				dataSource.updateByPut(object);
+			} else {
+				dataSource.updateByPatch(object, propertyMap);
+			}
+		} catch(ODataException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
 		}
 		
-		// ***
-
 		response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
 	}
 
@@ -431,4 +531,10 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 	        throw new ODataRuntimeException("Unable to create id for entity: " + entitySetName, e);
 	    }
 	}
+	
+	private ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotationTypes) {
+		ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
+		for(Class<? extends Annotation> annotationType : annotationTypes) provider.addIncludeFilter(new AnnotationTypeFilter(annotationType));
+		return provider;
+    }
 }

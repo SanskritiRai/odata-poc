@@ -1,6 +1,7 @@
 package com.cairone.odataexample.dtos;
 
 import com.cairone.odataexample.edm.resources.PaisEdm;
+import com.cairone.odataexample.entities.PaisEntity;
 
 
 public class PaisFrmDto {
@@ -22,6 +23,12 @@ public class PaisFrmDto {
 		this.id = paisEdm.getId();
 		this.nombre = paisEdm.getNombre() == null || paisEdm.getNombre().trim().isEmpty() ? null : paisEdm.getNombre().trim().toUpperCase();
 		this.prefijo = paisEdm.getPrefijo();
+	}
+
+	public PaisFrmDto(PaisEntity paisEntity) {
+		this.id = paisEntity.getId();
+		this.nombre = paisEntity.getNombre();
+		this.prefijo = paisEntity.getPrefijo();
 	}
 
 	public Integer getId() {
