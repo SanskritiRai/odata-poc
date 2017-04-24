@@ -1,6 +1,7 @@
 package com.cairone.odataexample.dtos;
 
 import com.cairone.odataexample.edm.resources.ProvinciaEdm;
+import com.cairone.odataexample.entities.ProvinciaEntity;
 
 public class ProvinciaFrmDto {
 
@@ -21,6 +22,10 @@ public class ProvinciaFrmDto {
 		this(provinciaEdm.getPaisId(), provinciaEdm.getId(), provinciaEdm.getNombre());
 	}
 
+	public ProvinciaFrmDto(ProvinciaEntity provinciaEntity) {
+		this(provinciaEntity.getPais().getId(), provinciaEntity.getId(), provinciaEntity.getNombre());
+	}
+	
 	public Integer getPaisID() {
 		return paisID;
 	}

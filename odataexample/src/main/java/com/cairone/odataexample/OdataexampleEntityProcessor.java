@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
@@ -24,6 +26,7 @@ import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.ContextURL.Suffix;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
+import org.apache.olingo.commons.api.data.Link;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
@@ -223,6 +226,64 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 	            		
 	            	fld.setAccessible(true);
 	            	fld.set(object, property.getValue());
+	            	
+	            } else {
+	            	
+	            	com.cairone.odataexample.annotations.EdmNavigationProperty edmNavigationProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmNavigationProperty.class);
+					
+	            	if(edmNavigationProperty != null) {
+	            		
+	            		String propertyName = edmNavigationProperty.name().isEmpty() ? fld.getName() : edmNavigationProperty.name();
+	            		
+	            		Class<?> fieldClass = fld.getType();
+
+	    				if(Collection.class.isAssignableFrom(fieldClass)) {
+	    					
+	    				} else {
+	    					
+	    					fld.setAccessible(true);
+	    					Object navpropField = fld.get(object);
+
+	    					com.cairone.odataexample.annotations.EdmEntitySet targetEdmEntitySet = fieldClass.getAnnotation(com.cairone.odataexample.annotations.EdmEntitySet.class);
+	    					String targetEntitySetName = targetEdmEntitySet.value();
+	    					Class<?> cl = entitySetMap.get(targetEntitySetName);
+	    					
+	    					if(navpropField == null) {
+	    						Constructor<?> c = cl.getConstructor();
+		    					navpropField = c.newInstance();
+		    					fld.set(object, navpropField);
+	    					}
+	    					
+	    					for(Field f : cl.getDeclaredFields()) {
+
+	    						com.cairone.odataexample.annotations.EdmProperty fieldEdmProperty = f.getAnnotation(com.cairone.odataexample.annotations.EdmProperty.class);
+	    						
+	    			            if (fieldEdmProperty != null) {
+	    			            	
+	    			            	String linkName = fieldEdmProperty.name().isEmpty() ? f.getName() : fieldEdmProperty.name();
+	    			            	Link link = requestEntity.getNavigationLink(propertyName);
+	    			            	Property property = link == null || link.getInlineEntity() == null ? null : link.getInlineEntity().getProperty(linkName);
+	    			            	String text = property == null ? null : property.getValue().toString();
+	    			            	
+	    			            	if(text != null) {
+		    			            	f.setAccessible(true);
+		    			            	
+		    			            	if(f.getType().isAssignableFrom(Integer.class)) {
+		    		            			f.set(navpropField, Integer.valueOf(text));
+		    		            		} else if(f.getType().isAssignableFrom(String.class)) {
+		    		            			f.set(navpropField, text);
+		    							} else if(f.getType().isAssignableFrom(LocalDate.class)) {
+		    								f.set(navpropField, LocalDate.parse(text, DateTimeFormatter.ofPattern("yyyy-MMM-dd")));
+		    							} else if(f.getType().isAssignableFrom(Boolean.class)) {
+		    								f.set(navpropField, text.trim().toUpperCase().equals("TRUE"));
+		    							} else {
+		    								f.set(navpropField, property.getValue());
+		    							}
+	    			            	}
+	    			            }
+	    					}
+	    				}
+	            	}
 	            }
 			}
     	
@@ -316,9 +377,10 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 				.stream()
 				.collect(Collectors.toMap(UriParameter::getName, x -> x));
 		
-		Map<String, Property> propertyMap = requestEntity.getProperties()
-				.stream()
-				.collect(Collectors.toMap(Property::getName, x -> x));
+		List<String> propertiesInJSON = Stream.concat(
+				requestEntity.getProperties().stream().map(Property::getName), 
+				requestEntity.getNavigationLinks().stream().map(Link::getTitle))
+			.collect(Collectors.toList());
 		
 		Class<?> clazz = entitySetMap.get(edmEntitySet.getName());
 		Object object;
@@ -359,6 +421,63 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 	            	} else if(property != null) {
 	            		fld.set(object, property.getValue());
 	            	}
+	            } else {
+
+	            	com.cairone.odataexample.annotations.EdmNavigationProperty edmNavigationProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmNavigationProperty.class);
+					
+	            	if(edmNavigationProperty != null) {
+	            		
+	            		String propertyName = edmNavigationProperty.name().isEmpty() ? fld.getName() : edmNavigationProperty.name();
+	            		
+	            		Class<?> fieldClass = fld.getType();
+
+	    				if(Collection.class.isAssignableFrom(fieldClass)) {
+	    					
+	    				} else {
+	    					
+	    					fld.setAccessible(true);
+	    					Object navpropField = fld.get(object);
+
+	    					com.cairone.odataexample.annotations.EdmEntitySet targetEdmEntitySet = fieldClass.getAnnotation(com.cairone.odataexample.annotations.EdmEntitySet.class);
+	    					String targetEntitySetName = targetEdmEntitySet.value();
+	    					Class<?> cl = entitySetMap.get(targetEntitySetName);
+	    					
+	    					if(navpropField == null) {
+	    						Constructor<?> c = cl.getConstructor();
+		    					navpropField = c.newInstance();
+		    					fld.set(object, navpropField);
+	    					}
+	    					
+	    					for(Field f : cl.getDeclaredFields()) {
+
+	    						com.cairone.odataexample.annotations.EdmProperty fieldEdmProperty = f.getAnnotation(com.cairone.odataexample.annotations.EdmProperty.class);
+	    						
+	    			            if (fieldEdmProperty != null) {
+	    			            	
+	    			            	String linkName = fieldEdmProperty.name().isEmpty() ? f.getName() : fieldEdmProperty.name();
+	    			            	Link link = requestEntity.getNavigationLink(propertyName);
+	    			            	Property property = link == null || link.getInlineEntity() == null ? null : link.getInlineEntity().getProperty(linkName);
+	    			            	String text = property == null ? null : property.getValue().toString();
+	    			            	
+	    			            	if(text != null) {
+		    			            	f.setAccessible(true);
+		    			            	
+		    			            	if(f.getType().isAssignableFrom(Integer.class)) {
+		    		            			f.set(navpropField, Integer.valueOf(text));
+		    		            		} else if(f.getType().isAssignableFrom(String.class)) {
+		    		            			f.set(navpropField, text);
+		    							} else if(f.getType().isAssignableFrom(LocalDate.class)) {
+		    								f.set(navpropField, LocalDate.parse(text, DateTimeFormatter.ofPattern("yyyy-MMM-dd")));
+		    							} else if(f.getType().isAssignableFrom(Boolean.class)) {
+		    								f.set(navpropField, text.trim().toUpperCase().equals("TRUE"));
+		    							} else {
+		    								f.set(navpropField, property.getValue());
+		    							}
+	    			            	}
+	    			            }
+	    					}
+	    				}
+	            	}
 	            }
 			}
     	
@@ -367,11 +486,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 		}
     	
 		try {
-			if(request.getMethod().equals(HttpMethod.PUT)) {
-				dataSource.updateByPut(object);
-			} else {
-				dataSource.updateByPatch(object, propertyMap);
-			}
+			dataSource.update(object, propertiesInJSON, request.getMethod().equals(HttpMethod.PUT));
 		} catch(ODataException e) {
 			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
 		}
@@ -386,19 +501,22 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 		  
 		UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
 		EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
-		EdmEntityType edmEntityType = edmEntitySet.getEntityType();
-
-		if(!edmEntityType.getName().equals("Pais")) {
-			return;
+		
+		DataSourceProvider dataSourceProvider = dataSourceProviderMap.get(edmEntitySet.getName());
+		
+		if(dataSourceProvider == null) {
+			throw new ODataApplicationException(
+					String.format("DATASOURCE PROVIDER FOR %s NOT FOUND", edmEntitySet.getName()), 
+					HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), 
+					Locale.ENGLISH);
 		}
 		
-		List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
+		DataSource dataSource = dataSourceProvider.getDataSource();
 		
-		UriParameter uriParameter = keyPredicates.get(0);
-    	Integer paisID = Integer.valueOf(uriParameter.getText());
+		List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
     	
     	try {
-			paisService.borrar(paisID);
+    		dataSource.delete(keyPredicates);
 		} catch (Exception e) {
 			throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
 		}

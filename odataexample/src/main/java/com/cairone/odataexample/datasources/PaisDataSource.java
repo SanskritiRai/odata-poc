@@ -56,54 +56,37 @@ public class PaisDataSource implements DataSource, DataSourceProvider {
 	}
 	
 	@Override
-	public Object updateByPut(Object entity) throws ODataException {
-
-    	if(entity instanceof PaisEdm) {
-    		
-    		PaisEdm pais = (PaisEdm) entity;
-    		PaisFrmDto paisFrmDto = new PaisFrmDto(pais);
-    		
-			try {
-				ValidatorUtil.validate(paisFrmDtoValidator, messageSource, paisFrmDto);
-				PaisEntity paisEntity = paisService.actualizar(paisFrmDto);
-				return new PaisEdm(paisEntity);
-			} catch (Exception e) {
-				String message = SQLExceptionParser.parse(e);
-				throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-			}
-    	}
-    	
-    	throw new ODataApplicationException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD PAIS", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-	}
-	
-	@Override
-	public Object updateByPatch(Object entity, Map<String, Property> properties) throws ODataException {
+	public Object update(Object entity, List<String> propertiesInJSON, boolean isPut) throws ODataException {
 		
     	if(entity instanceof PaisEdm) {
     		
     		PaisEdm pais = (PaisEdm) entity;
-    		PaisEntity paisEntity = paisService.buscarPorID(pais.getId());
+    		PaisFrmDto paisFrmDto;
     		
-    		if(paisEntity == null) {
-    			throw new ODataApplicationException(
-    					String.format("EL PAIS CON ID %s NO EXITE", pais.getId()), HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
+    		if(isPut) {
+    			paisFrmDto = new PaisFrmDto(pais);
+    		} else {
+	    		PaisEntity paisEntity = paisService.buscarPorID(pais.getId());
+	    		
+	    		if(paisEntity == null) {
+	    			throw new ODataApplicationException(
+	    					String.format("EL PAIS CON ID %s NO EXITE", pais.getId()), HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
+	    		}
+	    		
+	    		// *** CAMPO << NOMBRE >>
+	    		
+	    		if(propertiesInJSON.contains("nombre")) {
+	    			paisEntity.setNombre(pais.getNombre() == null || pais.getNombre().trim().isEmpty() ? null : pais.getNombre().trim().toUpperCase());
+	    		}
+	    		
+	    		// *** CAMPO << PREFIJO >>
+	    		
+	    		if(propertiesInJSON.contains("prefijo")) {
+	    			paisEntity.setPrefijo(pais.getPrefijo() == null ? null : pais.getPrefijo());
+	    		}
+	    		
+	    		paisFrmDto = new PaisFrmDto(paisEntity);
     		}
-    		
-    		// *** CAMPO << NOMBRE >>
-    		
-    		Property updatePropNombre = properties.get("nombre");
-    		if(updatePropNombre != null) {
-    			paisEntity.setNombre(pais.getNombre() == null || pais.getNombre().trim().isEmpty() ? null : pais.getNombre().trim().toUpperCase());
-    		}
-    		
-    		// *** CAMPO << PREFIJO >>
-    		
-    		Property updatePropPrefijo = properties.get("prefijo");
-    		if(updatePropPrefijo != null) {
-    			paisEntity.setPrefijo(pais.getPrefijo() == null ? null : pais.getPrefijo());
-    		}
-    		
-    		PaisFrmDto paisFrmDto = new PaisFrmDto(paisEntity);
     		
 			try {
 				ValidatorUtil.validate(paisFrmDtoValidator, messageSource, paisFrmDto);
@@ -119,7 +102,17 @@ public class PaisDataSource implements DataSource, DataSourceProvider {
 
 	@Override
 	public Object delete(List<UriParameter> keyPredicates) throws ODataException {
-		return null;
+
+		UriParameter uriParameter = keyPredicates.get(0);
+    	Integer paisID = Integer.valueOf(uriParameter.getText());
+
+    	try {
+			paisService.borrar(paisID);
+		} catch (Exception e) {
+			throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
+		}
+    	
+    	return null;
 	}
 	
 	@Override

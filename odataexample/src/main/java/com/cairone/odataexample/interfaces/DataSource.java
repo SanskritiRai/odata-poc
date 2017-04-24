@@ -10,7 +10,6 @@ import org.apache.olingo.server.api.uri.UriParameter;
 public interface DataSource {
 
 	Object create(Object entity) throws ODataException;
-	Object updateByPut(Object entity) throws ODataException;
-	Object updateByPatch(Object entity, Map<String, Property> properties) throws ODataException;
+	Object update(Object entity, List<String> propertiesInJSON, boolean isPut) throws ODataException;
 	Object delete(List<UriParameter> keyPredicates) throws ODataException;
 }
