@@ -5,6 +5,7 @@ import com.cairone.odataexample.annotations.EdmEntity;
 import com.cairone.odataexample.annotations.EdmEntitySet;
 import com.cairone.odataexample.annotations.EdmProperty;
 import com.cairone.odataexample.annotations.ODataJPAEntity;
+import com.cairone.odataexample.entities.SectorEntity;
 
 @EdmEntity(name = "Sector", key = { "id" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Sectores")
@@ -18,13 +19,17 @@ public class SectorEdm {
 	private String nombre = null;
 	
 	public SectorEdm() {}
-
+	
 	public SectorEdm(Integer id, String nombre) {
 		super();
 		this.id = id;
 		this.nombre = nombre;
 	}
-	
+
+	public SectorEdm(SectorEntity sectorEntity) {
+		this(sectorEntity.getId(), sectorEntity.getNombre());
+	}
+
 	public Integer getId() {
 		return id;
 	}

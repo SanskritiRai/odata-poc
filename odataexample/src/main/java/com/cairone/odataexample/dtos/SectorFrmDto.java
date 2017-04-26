@@ -1,6 +1,7 @@
 package com.cairone.odataexample.dtos;
 
 import com.cairone.odataexample.edm.resources.SectorEdm;
+import com.cairone.odataexample.entities.SectorEntity;
 
 public class SectorFrmDto {
 
@@ -17,6 +18,10 @@ public class SectorFrmDto {
 
 	public SectorFrmDto(SectorEdm sectorEdm) {
 		this(sectorEdm.getId(), sectorEdm.getNombre());
+	}
+
+	public SectorFrmDto(SectorEntity sectorEntity) {
+		this(sectorEntity.getId(), sectorEntity.getNombre());
 	}
 
 	public Integer getId() {
