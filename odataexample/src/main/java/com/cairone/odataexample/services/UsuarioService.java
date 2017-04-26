@@ -78,7 +78,7 @@ public class UsuarioService {
 		
 		UsuarioEntity usuarioEntity = new UsuarioEntity(personaEntity);
 		
-		usuarioEntity.setNombreUsuario(usuarioFrmDto.getNumeroDocumento());
+		usuarioEntity.setNombreUsuario(usuarioFrmDto.getNombreUsuario());
 		usuarioEntity.setClave("DEBE-DEFINIRSE");
 		usuarioEntity.setFechaAlta(LocalDate.now());
 		usuarioEntity.setCuentaVencida(usuarioFrmDto.getCuentaVencida());
@@ -105,7 +105,7 @@ public class UsuarioService {
 			throw new Exception(String.format("NO SE PUEDE ENCONTRAR UN USUARIO CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", usuarioFrmDto.getTipoDocumentoId(), usuarioFrmDto.getNumeroDocumento()));
 		}
 		
-		usuarioEntity.setNombreUsuario(usuarioFrmDto.getNumeroDocumento());
+		usuarioEntity.setNombreUsuario(usuarioFrmDto.getNombreUsuario());
 		usuarioEntity.setCuentaVencida(usuarioFrmDto.getCuentaVencida());
 		usuarioEntity.setClaveVencida(usuarioFrmDto.getClaveVencida());
 		usuarioEntity.setCuentaBloqueada(usuarioFrmDto.getCuentaBloqueada());

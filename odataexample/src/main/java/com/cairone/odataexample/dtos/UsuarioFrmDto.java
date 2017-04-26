@@ -1,6 +1,7 @@
 package com.cairone.odataexample.dtos;
 
 import com.cairone.odataexample.edm.resources.UsuarioEdm;
+import com.cairone.odataexample.entities.UsuarioEntity;
 
 public class UsuarioFrmDto {
 
@@ -27,6 +28,10 @@ public class UsuarioFrmDto {
 	
 	public UsuarioFrmDto(UsuarioEdm usuarioEdm) {
 		this(usuarioEdm.getTipoDocumentoId(), usuarioEdm.getNumeroDocumento(), usuarioEdm.getNombreUsuario(), usuarioEdm.getCuentaVencida(), usuarioEdm.getClaveVencida(), usuarioEdm.getCuentaBloqueada(), usuarioEdm.getUsuarioHabilitado());
+	}
+	
+	public UsuarioFrmDto(UsuarioEntity usuarioEntity) {
+		this(usuarioEntity.getPersona().getTipoDocumento().getId(), usuarioEntity.getPersona().getNumeroDocumento(), usuarioEntity.getNombreUsuario(), usuarioEntity.getCuentaVencida(), usuarioEntity.getClaveVencida(), usuarioEntity.getCuentaBloqueada(), usuarioEntity.getUsuarioHabilitado());
 	}
 
 	public Integer getTipoDocumentoId() {

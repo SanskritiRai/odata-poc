@@ -11,6 +11,7 @@ import com.cairone.odataexample.annotations.EdmNavigationProperty;
 import com.cairone.odataexample.annotations.EdmProperty;
 import com.cairone.odataexample.annotations.ODataJPAEntity;
 import com.cairone.odataexample.annotations.ODataJPAProperty;
+import com.cairone.odataexample.entities.UsuarioEntity;
 
 @EdmEntity(name = "Usuario", key = { "tipoDocumentoId", "numeroDocumento" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Usuarios")
@@ -63,6 +64,25 @@ public class UsuarioEdm {
 		this.usuarioHabilitado = usuarioHabilitado;
 		this.persona = persona;
 		this.permisos = new ArrayList<PermisoEdm>();
+	}
+	
+	public UsuarioEdm(UsuarioEntity usuarioEntity) {
+		this(
+				usuarioEntity.getPersona().getTipoDocumento().getId(),
+				usuarioEntity.getPersona().getNumeroDocumento(),
+				usuarioEntity.getNombreUsuario(),
+				usuarioEntity.getFechaAlta(),
+				usuarioEntity.getCuentaVencida(),
+				usuarioEntity.getClaveVencida(),
+				usuarioEntity.getCuentaBloqueada(),
+				usuarioEntity.getUsuarioHabilitado(),
+				new PersonaEdm(usuarioEntity.getPersona()));
+		
+		if(usuarioEntity.getUsuarioPermisoEntities() != null) {
+			usuarioEntity.getUsuarioPermisoEntities().forEach(usuarioPermisoEntity -> {
+				this.permisos.add(new PermisoEdm(usuarioPermisoEntity.getPermiso()));
+			});
+		}
 	}
 	
 	public Integer getTipoDocumentoId() {

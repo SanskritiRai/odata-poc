@@ -5,6 +5,7 @@ import com.cairone.odataexample.annotations.EdmEntity;
 import com.cairone.odataexample.annotations.EdmEntitySet;
 import com.cairone.odataexample.annotations.EdmProperty;
 import com.cairone.odataexample.annotations.ODataJPAEntity;
+import com.cairone.odataexample.entities.PermisoEntity;
 
 @EdmEntity(name = "Permiso", key = { "id" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Permisos")
@@ -23,6 +24,10 @@ public class PermisoEdm {
 		super();
 		this.id = id;
 		this.descripcion = descripcion;
+	}
+	
+	public PermisoEdm(PermisoEntity permisoEntity) {
+		this(permisoEntity.getNombre(), permisoEntity.getDescripcion());
 	}
 	
 	public String getId() {
