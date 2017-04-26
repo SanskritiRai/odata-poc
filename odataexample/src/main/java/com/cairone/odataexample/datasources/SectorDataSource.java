@@ -3,6 +3,7 @@ package com.cairone.odataexample.datasources;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -129,5 +130,10 @@ public class SectorDataSource implements DataSourceProvider, DataSource {
 		SectorEdm sectorEdm = sectorEntity == null ? null : new SectorEdm(sectorEntity);
 		
 		return sectorEdm;
+	}
+
+	@Override
+	public Iterable<?> readAll() throws ODataException {
+		return sectorService.ejecutarConsulta(null, null).stream().map(e -> new SectorEdm(e)).collect(Collectors.toList());
 	}
 }

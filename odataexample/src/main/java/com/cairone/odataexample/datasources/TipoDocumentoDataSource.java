@@ -3,6 +3,7 @@ package com.cairone.odataexample.datasources;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -136,5 +137,10 @@ public class TipoDocumentoDataSource implements DataSourceProvider, DataSource {
 		TipoDocumentoEdm tipoDocumentoEdm = tipoDocumentoEntity == null ? null : new TipoDocumentoEdm(tipoDocumentoEntity);
 		
 		return tipoDocumentoEdm;
+	}
+
+	@Override
+	public Iterable<?> readAll() throws ODataException {
+		return tipoDocumentoService.ejecutarConsulta(null, null).stream().map(e -> new TipoDocumentoEdm(e)).collect(Collectors.toList());
 	}
 }

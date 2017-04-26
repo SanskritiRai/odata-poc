@@ -3,6 +3,7 @@ package com.cairone.odataexample.datasources;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -135,5 +136,10 @@ public class PaisDataSource implements DataSource, DataSourceProvider {
 		PaisEdm paisEdm = paisEntity == null ? null : new PaisEdm(paisEntity);
 		
 		return paisEdm;
+	}
+
+	@Override
+	public Iterable<?> readAll() throws ODataException {
+		return paisService.ejecutarConsulta(null, null).stream().map(e -> new PaisEdm(e)).collect(Collectors.toList());
 	}
 }

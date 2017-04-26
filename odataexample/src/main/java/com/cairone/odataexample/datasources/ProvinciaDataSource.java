@@ -3,6 +3,7 @@ package com.cairone.odataexample.datasources;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -135,4 +136,8 @@ public class ProvinciaDataSource implements DataSourceProvider, DataSource {
     	return provinciaEdm;
 	}
 
+	@Override
+	public Iterable<?> readAll() throws ODataException {
+		return provinciaService.ejecutarConsulta(null, null).stream().map(e -> new ProvinciaEdm(e)).collect(Collectors.toList());
+	}
 }

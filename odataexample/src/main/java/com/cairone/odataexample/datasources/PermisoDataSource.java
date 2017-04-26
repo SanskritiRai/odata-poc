@@ -3,6 +3,7 @@ package com.cairone.odataexample.datasources;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -62,5 +63,10 @@ public class PermisoDataSource implements DataSourceProvider, DataSource {
 		PermisoEdm permisoEdm = permisoEntity == null ? null : new PermisoEdm(permisoEntity);
 		
 		return permisoEdm;
+	}
+
+	@Override
+	public Iterable<?> readAll() throws ODataException {
+		return permisoService.ejecutarConsulta(null, null).stream().map(e -> new PermisoEdm(e)).collect(Collectors.toList());
 	}
 }

@@ -35,7 +35,6 @@ import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.ex.ODataException;
-import org.apache.olingo.commons.api.ex.ODataRuntimeException;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.commons.api.http.HttpMethod;
@@ -59,8 +58,11 @@ import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.UriResource;
 import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceNavigation;
+import org.apache.olingo.server.api.uri.queryoption.CountOption;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.apache.olingo.server.api.uri.queryoption.SkipOption;
+import org.apache.olingo.server.api.uri.queryoption.TopOption;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
@@ -74,6 +76,7 @@ import com.cairone.odataexample.dtos.validators.PaisFrmDtoValidator;
 import com.cairone.odataexample.interfaces.DataSource;
 import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.PaisService;
+import com.google.common.collect.Iterables;
 
 @Component
 public class OdataexampleEntityProcessor implements EntityProcessor, EntityCollectionProcessor {
@@ -417,22 +420,49 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		
 		EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
 		EdmEntityType edmEntityType = edmEntitySet.getEntityType();
-        
-        if(!edmEntityType.getName().equals("Pais")) {
-        	return;
-        }
-        
-		EntityCollection data = new EntityCollection();
-		List<Entity> result = data.getEntities();
+
+	    SelectOption selectOption = uriInfo.getSelectOption();
+	    ExpandOption expandOption = uriInfo.getExpandOption();
+	    CountOption countOption = uriInfo.getCountOption();
+	    SkipOption skipOption = uriInfo.getSkipOption();
+	    TopOption topOption = uriInfo.getTopOption();
+	    
+	    String selectList = odata.createUriHelper().buildContextURLSelectList(edmEntityType, null, selectOption);
+	    boolean count = countOption == null ? false : countOption.getValue();
+	    
+		DataSourceProvider dataSourceProvider = dataSourceProviderMap.get(edmEntitySet.getName());
 		
-		paisService.ejecutarConsulta().forEach(paisEntity -> {
-			final Entity entity = new Entity()
-				.addProperty(new Property(null, "id", ValueType.PRIMITIVE, paisEntity.getId()))
-				.addProperty(new Property(null, "nombre", ValueType.PRIMITIVE, paisEntity.getNombre()))
-				.addProperty(new Property(null, "prefijo", ValueType.PRIMITIVE, paisEntity.getPrefijo()));
-			entity.setId(createId("Paises", paisEntity.getId()));
-			result.add(entity);
-		});
+		if(dataSourceProvider == null) {
+			throw new ODataApplicationException(
+					String.format("DATASOURCE PROVIDER FOR %s NOT FOUND", edmEntitySet.getName()), 
+					HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), 
+					Locale.ENGLISH);
+		}
+		
+		EntityCollection entityCollection = new EntityCollection();
+		List<Entity> result = entityCollection.getEntities();
+		
+		try {
+			Iterable<?> data = dataSourceProvider.readAll();
+			
+			if(count) entityCollection.setCount(Iterables.size(data));
+			
+			if(skipOption != null) {
+				data = Iterables.skip(data, skipOption.getValue());
+			}
+			
+			if(topOption != null) {
+				data = Iterables.limit(data, topOption.getValue()); 
+			}
+			
+			for(Object object : data) {
+				Entity entity = writeEntity(object, uriInfo.getExpandOption());
+				result.add(entity);
+			}
+		} catch (Exception e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
+		}
+		
 		
 		ODataSerializer serializer = odata.createSerializer(responseFormat);
 
@@ -441,27 +471,27 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 			contextUrl = ContextURL.with()
 					.serviceRoot(new URI(OdataexampleEdmProvider.SERVICE_ROOT))
 					.entitySet(edmEntitySet)
+					.selectList(selectList)
 					.build();
 		} catch (URISyntaxException e) {
 			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
 		}
 		
 		final String id = request.getRawBaseUri() + "/" + edmEntitySet.getName();
-		EntityCollectionSerializerOptions opts = EntityCollectionSerializerOptions.with().id(id).contextURL(contextUrl).build();
-		SerializerResult serializerResult = serializer.entityCollection(serviceMetadata, edmEntityType, data, opts);
+		
+		EntityCollectionSerializerOptions opts = EntityCollectionSerializerOptions.with()
+			.id(id)
+			.contextURL(contextUrl)
+			.count(countOption)
+			.select(selectOption)
+			.expand(expandOption).build();
+		
+		SerializerResult serializerResult = serializer.entityCollection(serviceMetadata, edmEntityType, entityCollection, opts);
 		InputStream serializedContent = serializerResult.getContent();
 
 		response.setContent(serializedContent);
 		response.setStatusCode(HttpStatusCode.OK.getStatusCode());
 		response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
-	}
-	
-	private URI createId(String entitySetName, Object id) {
-	    try {
-	        return new URI(entitySetName + "(" + String.valueOf(id) + ")");
-	    } catch (URISyntaxException e) {
-	        throw new ODataRuntimeException("Unable to create id for entity: " + entitySetName, e);
-	    }
 	}
 	
 	private ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotationTypes) {
@@ -478,7 +508,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		com.cairone.odataexample.annotations.EdmEntitySet edmEntitySet = clazz.getAnnotation(com.cairone.odataexample.annotations.EdmEntitySet.class);
 		com.cairone.odataexample.annotations.EdmEntity edmEntity = clazz.getAnnotation(com.cairone.odataexample.annotations.EdmEntity.class);
 		
-		String edmEntitySetName = edmEntitySet.name().isEmpty() ? clazz.getSimpleName() : edmEntitySet.name();
+		String edmEntitySetName = edmEntitySet.value().isEmpty() ? clazz.getSimpleName() : edmEntitySet.value();
 		
 		String[] keys = edmEntity.key();
     	Map<String, Object> keyValues = Arrays.asList(keys)
@@ -508,32 +538,35 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
             	String name = edmProperty.name().isEmpty() ? fld.getName() : edmProperty.name();
             	Object value = fld.get(object);
             	
-            	if(value instanceof LocalDate) {
+            	if(value != null) {
             		
-            		LocalDate localDateValue = (LocalDate) value;
-            		entity.addProperty(new Property(null, name, ValueType.PRIMITIVE, GregorianCalendar.from(localDateValue.atStartOfDay(ZoneId.systemDefault()))));
-            	
-            	} else if(value.getClass().isEnum()) {
-            		
-            		Class<?> fldClazz = fld.getType();
-            		Method getValor = fldClazz.getMethod("getValor");
-					Enum<?>[] enums = (Enum<?>[]) fldClazz.getEnumConstants();
-					
-					Object rvValue = getValor.invoke(value);
-					
-					for(Enum<?> enumeration : enums) {
-						Object rv = getValor.invoke(enumeration);
-						if(rvValue.equals(rv)) {
-    						entity.addProperty(new Property(null, name, ValueType.ENUM, rv));
-                    		break;
+	            	if(value instanceof LocalDate) {
+	            		
+	            		LocalDate localDateValue = (LocalDate) value;
+	            		entity.addProperty(new Property(null, name, ValueType.PRIMITIVE, GregorianCalendar.from(localDateValue.atStartOfDay(ZoneId.systemDefault()))));
+	            	
+	            	} else if(value.getClass().isEnum()) {
+	            		
+	            		Class<?> fldClazz = fld.getType();
+	            		Method getValor = fldClazz.getMethod("getValor");
+						Enum<?>[] enums = (Enum<?>[]) fldClazz.getEnumConstants();
+						
+						Object rvValue = getValor.invoke(value);
+						
+						for(Enum<?> enumeration : enums) {
+							Object rv = getValor.invoke(enumeration);
+							if(rvValue.equals(rv)) {
+	    						entity.addProperty(new Property(null, name, ValueType.ENUM, rv));
+	                    		break;
+							}
 						}
-					}
-            	} else {
-            		entity.addProperty(new Property(null, name, ValueType.PRIMITIVE, value));
-            	}
-            	
-            	if(keyValues.containsKey(name)) {
-            		keyValues.put(name, value);
+	            	} else {
+	            		entity.addProperty(new Property(null, name, ValueType.PRIMITIVE, value));
+	            	}
+	            	
+	            	if(keyValues.containsKey(name)) {
+	            		keyValues.put(name, value);
+	            	}
             	}
             }
             

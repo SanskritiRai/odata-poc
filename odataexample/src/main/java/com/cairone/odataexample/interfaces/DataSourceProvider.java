@@ -11,5 +11,6 @@ public interface DataSourceProvider {
 	DataSource getDataSource();
 	
 	Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException;
+	Iterable<?> readAll() throws ODataException;
 	
 }
