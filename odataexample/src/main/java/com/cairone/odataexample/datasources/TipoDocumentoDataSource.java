@@ -126,4 +126,15 @@ public class TipoDocumentoDataSource implements DataSourceProvider, DataSource {
 	public DataSource getDataSource() {
 		return this;
 	}
+
+	@Override
+	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+
+		Integer tipoDocumentoID = Integer.valueOf( keyPredicateMap.get("id").getText() );
+
+		TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoService.buscarPorID(tipoDocumentoID);
+		TipoDocumentoEdm tipoDocumentoEdm = tipoDocumentoEntity == null ? null : new TipoDocumentoEdm(tipoDocumentoEntity);
+		
+		return tipoDocumentoEdm;
+	}
 }

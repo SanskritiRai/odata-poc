@@ -154,4 +154,16 @@ public class UsuarioDataSource implements DataSourceProvider, DataSource {
 	public DataSource getDataSource() {
 		return this;
 	}
+
+	@Override
+	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+		
+		Integer tipoDocumentoID = Integer.valueOf( keyPredicateMap.get("tipoDocumentoId").getText() );
+		String numeroDocumento = CharMatcher.is('\'').trimFrom( keyPredicateMap.get("numeroDocumento").getText() );
+    	
+		UsuarioEntity usuarioEntity = usuarioService.buscarPorId(tipoDocumentoID, numeroDocumento);
+		UsuarioEdm usuarioEdm = usuarioEntity == null ? null : new UsuarioEdm(usuarioEntity);
+		
+		return usuarioEdm;
+	}
 }

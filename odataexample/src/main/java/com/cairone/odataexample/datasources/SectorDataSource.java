@@ -119,4 +119,15 @@ public class SectorDataSource implements DataSourceProvider, DataSource {
 	public DataSource getDataSource() {
 		return this;
 	}
+
+	@Override
+	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+		
+		Integer sectorID = Integer.valueOf( keyPredicateMap.get("id").getText() );
+		
+		SectorEntity sectorEntity = sectorService.buscarPorID(sectorID);
+		SectorEdm sectorEdm = sectorEntity == null ? null : new SectorEdm(sectorEntity);
+		
+		return sectorEdm;
+	}
 }

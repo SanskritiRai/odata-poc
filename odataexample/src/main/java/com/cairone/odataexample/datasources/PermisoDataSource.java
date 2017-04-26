@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
+import com.cairone.odataexample.edm.resources.PermisoEdm;
+import com.cairone.odataexample.entities.PermisoEntity;
 import com.cairone.odataexample.interfaces.DataSource;
 import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.PermisoService;
@@ -49,5 +51,16 @@ public class PermisoDataSource implements DataSourceProvider, DataSource {
 	@Override
 	public DataSource getDataSource() {
 		return this;
+	}
+
+	@Override
+	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+		
+		String permisoID = keyPredicateMap.get("id").getText();
+		
+		PermisoEntity permisoEntity = permisoService.buscarPorNombre(permisoID);
+		PermisoEdm permisoEdm = permisoEntity == null ? null : new PermisoEdm(permisoEntity);
+		
+		return permisoEdm;
 	}
 }

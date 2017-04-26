@@ -125,4 +125,15 @@ public class PaisDataSource implements DataSource, DataSourceProvider {
 	public String isSuitableFor() {
 		return ENTITY_SET_NAME;
 	}
+
+	@Override
+	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+		
+		Integer paisID = Integer.valueOf( keyPredicateMap.get("id").getText() );
+		
+		PaisEntity paisEntity = paisService.buscarPorID(paisID);
+		PaisEdm paisEdm = paisEntity == null ? null : new PaisEdm(paisEntity);
+		
+		return paisEdm;
+	}
 }

@@ -123,4 +123,16 @@ public class ProvinciaDataSource implements DataSourceProvider, DataSource {
 		return this;
 	}
 
+	@Override
+	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+		
+		Integer provinciaID = Integer.valueOf( keyPredicateMap.get("id").getText() );
+    	Integer paisID = Integer.valueOf( keyPredicateMap.get("paisId").getText() );
+    	
+    	ProvinciaEntity provinciaEntity = provinciaService.buscarPorID(paisID, provinciaID);
+    	ProvinciaEdm provinciaEdm = provinciaEntity == null ? null : new ProvinciaEdm(provinciaEntity);
+    	
+    	return provinciaEdm;
+	}
+
 }

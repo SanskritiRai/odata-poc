@@ -150,7 +150,7 @@ public class PersonaDataSource implements DataSourceProvider, DataSource {
 	public Object delete(Map<String, UriParameter> keyPredicateMap) throws ODataException {
 
 		Integer tipoDocumentoID = Integer.valueOf( keyPredicateMap.get("tipoDocumentoId").getText() );
-    	String numeroDocumento = keyPredicateMap.get("numeroDocumento").getText();
+		String numeroDocumento = CharMatcher.is('\'').trimFrom( keyPredicateMap.get("numeroDocumento").getText() );
     	
     	try {
 			personaService.borrar(tipoDocumentoID, numeroDocumento);
@@ -170,6 +170,18 @@ public class PersonaDataSource implements DataSourceProvider, DataSource {
 	@Override
 	public DataSource getDataSource() {
 		return this;
+	}
+
+	@Override
+	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+		
+		Integer tipoDocumentoID = Integer.valueOf( keyPredicateMap.get("tipoDocumentoId").getText() );
+		String numeroDocumento = CharMatcher.is('\'').trimFrom( keyPredicateMap.get("numeroDocumento").getText() );
+    	
+    	PersonaEntity personaEntity = personaService.buscarPorId(tipoDocumentoID, numeroDocumento);
+    	PersonaEdm personaEdm = personaEntity == null ? null : new PersonaEdm(personaEntity);
+    	
+    	return personaEdm;
 	}
 
 }

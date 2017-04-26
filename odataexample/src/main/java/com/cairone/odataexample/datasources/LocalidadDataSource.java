@@ -125,4 +125,17 @@ public class LocalidadDataSource implements DataSourceProvider, DataSource {
 	public DataSource getDataSource() {
 		return this;
 	}
+
+	@Override
+	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+		
+		Integer paisID = Integer.valueOf( keyPredicateMap.get("paisId").getText() );
+    	Integer provinciaID = Integer.valueOf( keyPredicateMap.get("provinciaId").getText() );
+    	Integer localidadID = Integer.valueOf( keyPredicateMap.get("localidadId").getText() );
+    	
+    	LocalidadEntity localidadEntity = localidadService.buscarPorID(paisID, provinciaID, localidadID);
+    	LocalidadEdm localidadEdm = localidadEntity == null ? null : new LocalidadEdm(localidadEntity);
+    	
+    	return localidadEdm;
+	}
 }
