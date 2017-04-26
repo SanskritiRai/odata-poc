@@ -33,8 +33,6 @@ import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
-import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
-import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.ex.ODataRuntimeException;
 import org.apache.olingo.commons.api.format.ContentType;
@@ -51,17 +49,14 @@ import org.apache.olingo.server.api.deserializer.DeserializerResult;
 import org.apache.olingo.server.api.deserializer.ODataDeserializer;
 import org.apache.olingo.server.api.processor.EntityCollectionProcessor;
 import org.apache.olingo.server.api.processor.EntityProcessor;
-import org.apache.olingo.server.api.processor.PrimitiveProcessor;
 import org.apache.olingo.server.api.serializer.EntityCollectionSerializerOptions;
 import org.apache.olingo.server.api.serializer.EntitySerializerOptions;
 import org.apache.olingo.server.api.serializer.ODataSerializer;
-import org.apache.olingo.server.api.serializer.PrimitiveSerializerOptions;
 import org.apache.olingo.server.api.serializer.SerializerResult;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.UriResource;
 import org.apache.olingo.server.api.uri.UriResourceEntitySet;
-import org.apache.olingo.server.api.uri.UriResourceProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
@@ -72,13 +67,12 @@ import org.springframework.stereotype.Component;
 
 import com.cairone.odataexample.annotations.EdmEntity;
 import com.cairone.odataexample.dtos.validators.PaisFrmDtoValidator;
-import com.cairone.odataexample.entities.PaisEntity;
 import com.cairone.odataexample.interfaces.DataSource;
 import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.PaisService;
 
 @Component
-public class OdataexampleEntityProcessor implements EntityProcessor, PrimitiveProcessor, EntityCollectionProcessor {
+public class OdataexampleEntityProcessor implements EntityProcessor, EntityCollectionProcessor {
 
 	private OData odata;
 	private ServiceMetadata serviceMetadata;
@@ -402,77 +396,6 @@ public class OdataexampleEntityProcessor implements EntityProcessor, PrimitivePr
 		}
     	
     	response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
-	}
-
-	@Override
-	public void readPrimitive(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType responseFormat) throws ODataApplicationException, ODataLibraryException {
-		
-		List<UriResource> resourceParts = uriInfo.getUriResourceParts();
-		
-		UriResourceEntitySet uriEntityset = (UriResourceEntitySet) resourceParts.get(0);
-        EdmEntitySet edmEntitySet = uriEntityset.getEntitySet();
-        EdmEntityType edmEntityType = edmEntitySet.getEntityType();
-        
-        List<UriParameter> keyPredicates = uriEntityset.getKeyPredicates();
-        
-        if(edmEntityType.getName().equals("Pais")) {
-        	
-        	UriParameter uriParameter = keyPredicates.get(0);
-	    	Integer paisID = Integer.valueOf(uriParameter.getText());
-	    	
-	    	PaisEntity paisEntity = paisService.buscarPorID(paisID);
-
-	        if(paisEntity == null) {
-	            throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
-	        }
-	        
-	        UriResourceProperty uriProperty = (UriResourceProperty) resourceParts.get(resourceParts.size() -1);
-	        EdmProperty edmProperty = uriProperty.getProperty();
-	        String edmPropertyName = edmProperty.getName();
-	        
-	        EdmPrimitiveType edmPropertyType = (EdmPrimitiveType) edmProperty.getType();
-	        
-	        final Entity entity = new Entity()
-				.addProperty(new Property(null, "id", ValueType.PRIMITIVE, paisEntity.getId()))
-				.addProperty(new Property(null, "nombre", ValueType.PRIMITIVE, paisEntity.getNombre()))
-				.addProperty(new Property(null, "prefijo", ValueType.PRIMITIVE, paisEntity.getPrefijo()));
-			entity.setId(createId("Paises", paisEntity.getId()));
-			
-			Property property = entity.getProperty(edmPropertyName);
-			
-			if(property == null) {
-				throw new ODataApplicationException("Property not found", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
-			}
-			
-			Object value = property.getValue();
-			
-			if (value != null) {
-	              
-				ODataSerializer serializer = odata.createSerializer(responseFormat);
-				ContextURL contextUrl = ContextURL.with().entitySet(edmEntitySet).navOrPropertyPath(edmPropertyName).build();
-				PrimitiveSerializerOptions options = PrimitiveSerializerOptions.with().contextURL(contextUrl).build();
-	            
-				SerializerResult serializerResult = serializer.primitive(serviceMetadata, edmPropertyType, property, options);
-				InputStream propertyStream = serializerResult.getContent();
-
-				response.setContent(propertyStream);
-				response.setStatusCode(HttpStatusCode.OK.getStatusCode());
-				response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
-				
-			} else {
-				response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
-			}
-        }
-	}
-
-	@Override
-	public void updatePrimitive(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType requestFormat, ContentType responseFormat) throws ODataApplicationException, ODataLibraryException {
-		
-	}
-
-	@Override
-	public void deletePrimitive(ODataRequest request, ODataResponse response, UriInfo uriInfo) throws ODataApplicationException, ODataLibraryException {
-		
 	}
 
 	@Override
