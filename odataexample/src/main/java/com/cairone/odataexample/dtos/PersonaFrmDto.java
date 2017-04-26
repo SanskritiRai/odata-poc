@@ -2,6 +2,7 @@ package com.cairone.odataexample.dtos;
 
 import com.cairone.odataexample.edm.resources.GeneroOdataEnum;
 import com.cairone.odataexample.edm.resources.PersonaEdm;
+import com.cairone.odataexample.entities.PersonaEntity;
 
 public class PersonaFrmDto {
 	
@@ -43,6 +44,19 @@ public class PersonaFrmDto {
 				personaEdm.getGenero());
 	}
 
+	public PersonaFrmDto(PersonaEntity personaEntity) {
+		this(
+				personaEntity.getTipoDocumento().getId(), 
+				personaEntity.getNumeroDocumento(), 
+				personaEntity.getNombres(), 
+				personaEntity.getApellidos(), 
+				personaEntity.getApodo(), 
+				personaEntity.getLocalidad().getProvincia().getPais().getId(),
+				personaEntity.getLocalidad().getProvincia().getId(),
+				personaEntity.getLocalidad().getId(),
+				personaEntity.getGenero().toGeneroOdataEnum());
+	}
+	
 	public Integer getTipoDocumentoId() {
 		return tipoDocumentoId;
 	}
@@ -114,5 +128,4 @@ public class PersonaFrmDto {
 	public void setGenero(GeneroOdataEnum genero) {
 		this.genero = genero;
 	}
-	
 }

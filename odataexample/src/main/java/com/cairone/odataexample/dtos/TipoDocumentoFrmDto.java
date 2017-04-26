@@ -1,6 +1,7 @@
 package com.cairone.odataexample.dtos;
 
 import com.cairone.odataexample.edm.resources.TipoDocumentoEdm;
+import com.cairone.odataexample.entities.TipoDocumentoEntity;
 
 public class TipoDocumentoFrmDto {
 
@@ -19,6 +20,10 @@ public class TipoDocumentoFrmDto {
 
 	public TipoDocumentoFrmDto(TipoDocumentoEdm tipoDocumentoEdm) {
 		this(tipoDocumentoEdm.getId(), tipoDocumentoEdm.getNombre(), tipoDocumentoEdm.getAbreviatura());
+	}
+
+	public TipoDocumentoFrmDto(TipoDocumentoEntity tipoDocumentoEntity) {
+		this(tipoDocumentoEntity.getId(), tipoDocumentoEntity.getNombre(), tipoDocumentoEntity.getAbreviatura());
 	}
 
 	public Integer getId() {

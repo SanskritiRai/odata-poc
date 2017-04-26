@@ -1,10 +1,12 @@
 package com.cairone.odataexample.edm.resources;
 
 import com.cairone.odataexample.annotations.EdmEnum;
+import com.cairone.odataexample.enums.GeneroEnum;
+import com.cairone.odataexample.interfaces.OdataEnum;
 
 
 @EdmEnum(name="genero")
-public enum GeneroOdataEnum {
+public enum GeneroOdataEnum implements OdataEnum<GeneroOdataEnum>{
 	MASCULINO(1), FEMENINO(2);
 
 	private final int valor;
@@ -15,5 +17,21 @@ public enum GeneroOdataEnum {
 
 	public int getValor() {
 		return valor;
+	}
+	
+	public GeneroOdataEnum setValor(int valor) {
+		if(valor == 2) return FEMENINO; else return MASCULINO;
+	}
+
+	public GeneroEnum toGeneroEnum() {
+		
+		switch(valor) {
+		case 2:
+			return GeneroEnum.FEMENINO;
+		case 1:
+		default:
+			return GeneroEnum.MASCULINO;
+		
+		}
 	}
 }

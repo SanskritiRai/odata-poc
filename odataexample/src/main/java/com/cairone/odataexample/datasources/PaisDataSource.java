@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
@@ -56,17 +55,20 @@ public class PaisDataSource implements DataSource, DataSourceProvider {
 	}
 	
 	@Override
-	public Object update(Object entity, List<String> propertiesInJSON, boolean isPut) throws ODataException {
+	public Object update(Map<String, UriParameter> keyPredicateMap, Object entity, List<String> propertiesInJSON, boolean isPut) throws ODataException {
 		
     	if(entity instanceof PaisEdm) {
     		
     		PaisEdm pais = (PaisEdm) entity;
     		PaisFrmDto paisFrmDto;
-    		
+
+        	Integer paisID = Integer.valueOf( keyPredicateMap.get("id").getText() );
+        	
     		if(isPut) {
     			paisFrmDto = new PaisFrmDto(pais);
+    			paisFrmDto.setId(paisID);
     		} else {
-	    		PaisEntity paisEntity = paisService.buscarPorID(pais.getId());
+	    		PaisEntity paisEntity = paisService.buscarPorID(paisID);
 	    		
 	    		if(paisEntity == null) {
 	    			throw new ODataApplicationException(
@@ -101,10 +103,9 @@ public class PaisDataSource implements DataSource, DataSourceProvider {
 	}
 
 	@Override
-	public Object delete(List<UriParameter> keyPredicates) throws ODataException {
+	public Object delete(Map<String, UriParameter> keyPredicateMap) throws ODataException {
 
-		UriParameter uriParameter = keyPredicates.get(0);
-    	Integer paisID = Integer.valueOf(uriParameter.getText());
+		Integer paisID = Integer.valueOf( keyPredicateMap.get("id").getText() );
 
     	try {
 			paisService.borrar(paisID);

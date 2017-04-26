@@ -2,6 +2,7 @@ package com.cairone.odataexample.datasources;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -54,17 +55,22 @@ public class ProvinciaDataSource implements DataSourceProvider, DataSource {
 	}
 
 	@Override
-	public Object update(Object entity, List<String> propertiesInJSON, boolean isPut) throws ODataException {
+	public Object update(Map<String, UriParameter> keyPredicateMap, Object entity, List<String> propertiesInJSON, boolean isPut) throws ODataException {
 
     	if(entity instanceof ProvinciaEdm) {
     		
     		ProvinciaEdm provincia = (ProvinciaEdm) entity;
     		ProvinciaFrmDto provinciaFrmDto;
     		
+        	Integer provinciaID = Integer.valueOf( keyPredicateMap.get("id").getText() );
+        	Integer paisID = Integer.valueOf( keyPredicateMap.get("paisId").getText() );
+        	
     		if(isPut) {
     			provinciaFrmDto = new ProvinciaFrmDto(provincia);
+    			provinciaFrmDto.setId(provinciaID);
+    			provinciaFrmDto.setPaisID(paisID);
     		} else {
-	    		ProvinciaEntity provinciaEntity = provinciaService.buscarPorID(provincia.getPaisId(), provincia.getId());
+	    		ProvinciaEntity provinciaEntity = provinciaService.buscarPorID(paisID, provinciaID);
 	    		
 	    		if(provinciaEntity == null) {
 	    			throw new ODataApplicationException(
@@ -89,23 +95,14 @@ public class ProvinciaDataSource implements DataSourceProvider, DataSource {
 			}
     	}
     	
-    	throw new ODataApplicationException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD PAIS", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+    	throw new ODataApplicationException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD PROVINCIA", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
 	}
 
 	@Override
-	public Object delete(List<UriParameter> keyPredicates) throws ODataException {
+	public Object delete(Map<String, UriParameter> keyPredicateMap) throws ODataException {
 
-    	Integer provinciaID = keyPredicates.stream()
-    			.filter(e -> e.getName().equals("id"))
-    			.findFirst()
-    			.map(e -> { return Integer.valueOf(e.getText()); })
-    			.get();
-
-    	Integer paisID = keyPredicates.stream()
-    			.filter(e -> e.getName().equals("paisId"))
-    			.findFirst()
-    			.map(e -> { return Integer.valueOf(e.getText()); })
-    			.get();
+    	Integer provinciaID = Integer.valueOf( keyPredicateMap.get("id").getText() );
+    	Integer paisID = Integer.valueOf( keyPredicateMap.get("paisId").getText() );
     	
     	try {
 			provinciaService.borrar(paisID, provinciaID);

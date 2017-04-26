@@ -11,6 +11,7 @@ import com.cairone.odataexample.annotations.EdmNavigationProperty;
 import com.cairone.odataexample.annotations.EdmProperty;
 import com.cairone.odataexample.annotations.ODataJPAEntity;
 import com.cairone.odataexample.annotations.ODataJPAProperty;
+import com.cairone.odataexample.entities.PersonaEntity;
 
 @EdmEntity(name = "Persona", key = { "tipoDocumentoId", "numeroDocumento" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Personas")
@@ -59,6 +60,14 @@ public class PersonaEdm {
 		this.fechaAlta = fechaAlta;
 		this.genero = genero;
 		this.sectores = new ArrayList<PersonaSectorEdm>();
+	}
+	
+	public PersonaEdm(PersonaEntity personaEntity) {
+		this(personaEntity.getTipoDocumento().getId(), personaEntity.getNumeroDocumento(), personaEntity.getNombres(), personaEntity.getApellidos(), personaEntity.getApodo(), new LocalidadEdm(personaEntity.getLocalidad()), personaEntity.getFechaAlta(), personaEntity.getGenero().toGeneroOdataEnum());
+		
+		if(personaEntity.getPersonaSectorEntities() != null) {
+			this.sectores = PersonaSectorEdm.crearLista(personaEntity.getPersonaSectorEntities());
+		}
 	}
 	
 	public Integer getTipoDocumentoId() {

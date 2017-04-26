@@ -1,6 +1,7 @@
 package com.cairone.odataexample.dtos;
 
 import com.cairone.odataexample.edm.resources.LocalidadEdm;
+import com.cairone.odataexample.entities.LocalidadEntity;
 
 
 public class LocalidadFrmDto {
@@ -26,6 +27,10 @@ public class LocalidadFrmDto {
 
 	public LocalidadFrmDto(LocalidadEdm localidadEdm) {
 		this(localidadEdm.getPaisId(), localidadEdm.getProvinciaId(), localidadEdm.getLocalidadId(), localidadEdm.getNombre(), localidadEdm.getCp(), localidadEdm.getPrefijo());
+	}
+
+	public LocalidadFrmDto(LocalidadEntity localidadEntity) {
+		this(localidadEntity.getProvincia().getPais().getId(), localidadEntity.getProvincia().getId(), localidadEntity.getId(), localidadEntity.getNombre(), localidadEntity.getCp(), localidadEntity.getPrefijo());
 	}
 
 	public Integer getPaisId() {

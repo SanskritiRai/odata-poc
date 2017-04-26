@@ -1,11 +1,14 @@
 package com.cairone.odataexample.edm.resources;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.cairone.odataexample.OdataexampleEdmProvider;
 import com.cairone.odataexample.annotations.EdmEntity;
 import com.cairone.odataexample.annotations.EdmEntitySet;
 import com.cairone.odataexample.annotations.EdmProperty;
+import com.cairone.odataexample.entities.PersonaSectorEntity;
 
 @EdmEntity(name = "PersonaSector", key = { "id" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("PersonasSectores")
@@ -28,7 +31,11 @@ public class PersonaSectorEdm {
 		this.nombre = nombre;
 		this.fechaIngreso = fechaIngreso;
 	}
-
+	
+	public PersonaSectorEdm(PersonaSectorEntity personaSectorEntity) {
+		this(personaSectorEntity.getSector().getId(), personaSectorEntity.getSector().getNombre(), personaSectorEntity.getFechaIngreso());
+	}
+	
 	public Integer getId() {
 		return id;
 	}
@@ -53,4 +60,14 @@ public class PersonaSectorEdm {
 		this.fechaIngreso = fechaIngreso;
 	}
 
+	public static List<PersonaSectorEdm> crearLista(Iterable<PersonaSectorEntity> personaSectorEntities) {
+		
+		List<PersonaSectorEdm> lista = new ArrayList<PersonaSectorEdm>();
+		
+		for(PersonaSectorEntity personaSectorEntity : personaSectorEntities) {
+			lista.add(new PersonaSectorEdm(personaSectorEntity));
+		}
+		
+		return lista;
+	}
 }
