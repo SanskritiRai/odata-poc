@@ -33,6 +33,7 @@ import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.ex.ODataRuntimeException;
 import org.apache.olingo.commons.api.format.ContentType;
@@ -57,6 +58,9 @@ import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.UriResource;
 import org.apache.olingo.server.api.uri.UriResourceEntitySet;
+import org.apache.olingo.server.api.uri.UriResourceNavigation;
+import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
+import org.apache.olingo.server.api.uri.queryoption.SelectOption;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
@@ -121,66 +125,6 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		} catch (ClassNotFoundException e) {
 			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
 		}
-	}
-
-	@Override
-	public void readEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType responseFormat) throws ODataApplicationException, ODataLibraryException {
-		
-		List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
-		
-	    UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
-	    EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
-
-		DataSourceProvider dataSourceProvider = dataSourceProviderMap.get(edmEntitySet.getName());
-		
-		if(dataSourceProvider == null) {
-			throw new ODataApplicationException(
-					String.format("DATASOURCE PROVIDER FOR %s NOT FOUND", edmEntitySet.getName()), 
-					HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), 
-					Locale.ENGLISH);
-		}
-		
-	    List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
-	    Map<String, UriParameter> keyPredicateMap = keyPredicates
-				.stream()
-				.collect(Collectors.toMap(UriParameter::getName, x -> x));
-		
-	    Entity entity;
-	    
-		try {
-			Object object = dataSourceProvider.readFromKey(keyPredicateMap);
-			
-			if(object == null) {
-				throw new ODataApplicationException("LA ENTIDAD SOLICITADA NO EXISTE", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
-			}
-			
-			entity = writeEntity(object);
-			
-		} catch (ODataException | IllegalArgumentException | IllegalAccessException | NoSuchMethodException | SecurityException | InvocationTargetException e) {
-			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
-		}
-		
-		EdmEntityType entityType = edmEntitySet.getEntityType();
-		
-	    ContextURL contextUrl = null;
-		try {
-			contextUrl = ContextURL.with()
-					.serviceRoot(new URI(OdataexampleEdmProvider.SERVICE_ROOT))
-					.entitySet(edmEntitySet)
-					.suffix(Suffix.ENTITY)
-					.build();
-		} catch (URISyntaxException e) {
-			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-		}
-	    EntitySerializerOptions options = EntitySerializerOptions.with().contextURL(contextUrl).build();
-
-	    ODataSerializer serializer = odata.createSerializer(responseFormat);
-	    SerializerResult serializerResult = serializer.entity(serviceMetadata, entityType, entity, options);
-	    InputStream entityStream = serializerResult.getContent();
-
-	    response.setContent(entityStream);
-	    response.setStatusCode(HttpStatusCode.OK.getStatusCode());
-	    response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
 	}
 
 	@Override
@@ -399,6 +343,73 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 	}
 
 	@Override
+	public void readEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType responseFormat) throws ODataApplicationException, ODataLibraryException {
+		
+		List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
+		
+	    UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
+	    EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
+
+	    SelectOption selectOption = uriInfo.getSelectOption();
+	    ExpandOption expandOption = uriInfo.getExpandOption();
+	    
+	    EdmEntityType edmEntityType = edmEntitySet.getEntityType();
+	    String selectList = odata.createUriHelper().buildContextURLSelectList(edmEntityType, null, selectOption);
+	    
+		DataSourceProvider dataSourceProvider = dataSourceProviderMap.get(edmEntitySet.getName());
+		
+		if(dataSourceProvider == null) {
+			throw new ODataApplicationException(
+					String.format("DATASOURCE PROVIDER FOR %s NOT FOUND", edmEntitySet.getName()), 
+					HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), 
+					Locale.ENGLISH);
+		}
+		
+	    List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
+	    Map<String, UriParameter> keyPredicateMap = keyPredicates
+				.stream()
+				.collect(Collectors.toMap(UriParameter::getName, x -> x));
+		
+	    Entity entity;
+	    
+		try {
+			Object object = dataSourceProvider.readFromKey(keyPredicateMap);
+			
+			if(object == null) {
+				throw new ODataApplicationException("LA ENTIDAD SOLICITADA NO EXISTE", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
+			}
+			
+			entity = writeEntity(object, uriInfo.getExpandOption());
+			
+		} catch (ODataException | IllegalArgumentException | IllegalAccessException | NoSuchMethodException | SecurityException | InvocationTargetException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
+		}
+		
+		EdmEntityType entityType = edmEntitySet.getEntityType();
+		
+	    ContextURL contextUrl = null;
+		try {
+			contextUrl = ContextURL.with()
+					.serviceRoot(new URI(OdataexampleEdmProvider.SERVICE_ROOT))
+					.entitySet(edmEntitySet)
+					.selectList(selectList)
+					.suffix(Suffix.ENTITY)
+					.build();
+		} catch (URISyntaxException e) {
+			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+		}
+	    EntitySerializerOptions options = EntitySerializerOptions.with().contextURL(contextUrl).select(selectOption).expand(expandOption).build();
+	    
+	    ODataSerializer serializer = odata.createSerializer(responseFormat);
+	    SerializerResult serializerResult = serializer.entity(serviceMetadata, entityType, entity, options);
+	    InputStream entityStream = serializerResult.getContent();
+
+	    response.setContent(entityStream);
+	    response.setStatusCode(HttpStatusCode.OK.getStatusCode());
+	    response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
+	}
+
+	@Override
 	public void readEntityCollection(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType responseFormat) throws ODataApplicationException, ODataLibraryException {
 		
 		List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
@@ -459,7 +470,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		return provider;
     }
 	
-	private Entity writeEntity(Object object) throws IllegalArgumentException, IllegalAccessException, NoSuchMethodException, SecurityException, InvocationTargetException, ODataApplicationException {
+	private Entity writeEntity(Object object, ExpandOption expandOption) throws IllegalArgumentException, IllegalAccessException, NoSuchMethodException, SecurityException, InvocationTargetException, ODataApplicationException {
 		
 		Entity entity = new Entity();
 		Class<?> clazz = object.getClass();
@@ -473,6 +484,18 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
     	Map<String, Object> keyValues = Arrays.asList(keys)
     		.stream()
     		.collect(Collectors.toMap(x -> x, x -> x));
+    	
+    	Map<String, EdmNavigationProperty> edmNavigationPropertyMap = new HashMap<String, EdmNavigationProperty>();
+    	if(expandOption != null && !expandOption.getExpandItems().isEmpty()) {
+    		expandOption.getExpandItems().forEach(expandItem -> {
+    			UriResource uriResource = expandItem.getResourcePath().getUriResourceParts().get(0);
+    			if(uriResource instanceof UriResourceNavigation) {
+    				EdmNavigationProperty edmNavigationProperty = ((UriResourceNavigation) uriResource).getProperty();
+    				String navPropName = edmNavigationProperty.getName();
+    				edmNavigationPropertyMap.put(navPropName, edmNavigationProperty);
+    			}
+    		});
+    	}
 		
 		for(Field fld : object.getClass().getDeclaredFields()) {
 
@@ -511,6 +534,46 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
             	
             	if(keyValues.containsKey(name)) {
             		keyValues.put(name, value);
+            	}
+            }
+            
+            com.cairone.odataexample.annotations.EdmNavigationProperty edmNavigationProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmNavigationProperty.class);
+			
+            if(edmNavigationProperty != null) {
+            	
+            	String navigationPropertyName = edmNavigationProperty.name().isEmpty() ? fld.getName() : edmNavigationProperty.name();
+            	EdmNavigationProperty navigationProperty = edmNavigationPropertyMap.get(navigationPropertyName);
+            	
+            	if(navigationProperty != null) {
+
+            		fld.setAccessible(true);
+            		
+            		Class<?> fieldClass = fld.getType();
+            		Object inlineEntity = fld.get(object);
+
+            		Link link = new Link();
+					link.setTitle(navigationPropertyName);
+					
+    				if(Collection.class.isAssignableFrom(fieldClass)) {
+    					
+    					EntityCollection data = new EntityCollection();
+    					
+    					@SuppressWarnings("unchecked")
+						Collection<Object> objects = (Collection<Object>) inlineEntity;
+    					
+    					for(Object item : objects) {
+    						Entity expandEntity = writeEntity(item, null);
+    						data.getEntities().add(expandEntity);
+    					}
+    					
+    					link.setInlineEntitySet(data);
+    					
+    				} else {
+    					Entity expandEntity = writeEntity(inlineEntity, null);
+    					link.setInlineEntity(expandEntity);
+    				}
+
+					entity.getNavigationLinks().add(link);
             	}
             }
 		}
@@ -586,7 +649,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
         		Class<?> fieldClass = fld.getType();
 
 				if(Collection.class.isAssignableFrom(fieldClass)) {
-					
+					//FIXME
 				} else {
 
 					fld.setAccessible(true);
