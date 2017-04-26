@@ -60,6 +60,7 @@ import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceNavigation;
 import org.apache.olingo.server.api.uri.queryoption.CountOption;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
+import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
 import org.apache.olingo.server.api.uri.queryoption.SkipOption;
 import org.apache.olingo.server.api.uri.queryoption.TopOption;
@@ -426,6 +427,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 	    CountOption countOption = uriInfo.getCountOption();
 	    SkipOption skipOption = uriInfo.getSkipOption();
 	    TopOption topOption = uriInfo.getTopOption();
+	    OrderByOption orderByOption = uriInfo.getOrderByOption();
 	    
 	    String selectList = odata.createUriHelper().buildContextURLSelectList(edmEntityType, null, selectOption);
 	    boolean count = countOption == null ? false : countOption.getValue();
@@ -443,7 +445,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		List<Entity> result = entityCollection.getEntities();
 		
 		try {
-			Iterable<?> data = dataSourceProvider.readAll();
+			Iterable<?> data = dataSourceProvider.readAll(orderByOption);
 			
 			if(count) entityCollection.setCount(Iterables.size(data));
 			
@@ -456,7 +458,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 			}
 			
 			for(Object object : data) {
-				Entity entity = writeEntity(object, uriInfo.getExpandOption());
+				Entity entity = writeEntity(object, expandOption);
 				result.add(entity);
 			}
 		} catch (Exception e) {

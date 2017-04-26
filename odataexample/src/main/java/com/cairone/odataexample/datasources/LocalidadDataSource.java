@@ -1,16 +1,27 @@
 package com.cairone.odataexample.datasources;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
+import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.apache.olingo.server.api.uri.UriParameter;
+import org.apache.olingo.server.api.uri.UriResource;
+import org.apache.olingo.server.api.uri.UriResourcePrimitiveProperty;
+import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
+import org.apache.olingo.server.api.uri.queryoption.expression.Expression;
+import org.apache.olingo.server.api.uri.queryoption.expression.Member;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Component;
 
 import com.cairone.odataexample.dtos.LocalidadFrmDto;
@@ -141,7 +152,30 @@ public class LocalidadDataSource implements DataSourceProvider, DataSource {
 	}
 
 	@Override
-	public Iterable<?> readAll() throws ODataException {
-		return localidadService.ejecutarConsulta(null, null).stream().map(e -> new LocalidadEdm(e)).collect(Collectors.toList());
+	public Iterable<?> readAll(OrderByOption orderByOption) throws ODataException {
+
+		List<Sort.Order> orderByList = new ArrayList<Sort.Order>();
+		
+		if(orderByOption != null) {
+			orderByOption.getOrders().forEach(orderByItem -> {
+				
+				Expression expression = orderByItem.getExpression();
+				if(expression instanceof Member){
+					
+					UriInfoResource resourcePath = ((Member)expression).getResourcePath();
+					UriResource uriResource = resourcePath.getUriResourceParts().get(0);
+					
+				    if (uriResource instanceof UriResourcePrimitiveProperty) {
+				    	EdmProperty edmProperty = ((UriResourcePrimitiveProperty)uriResource).getProperty();
+						Direction direction = orderByItem.isDescending() ? Direction.DESC : Direction.ASC;
+						String property = edmProperty.getName();
+						orderByList.add(new Order(direction, property));
+				    }
+				}
+				
+			});
+		}
+		
+		return localidadService.ejecutarConsulta(null, orderByList).stream().map(e -> new LocalidadEdm(e)).collect(Collectors.toList());
 	}
 }
