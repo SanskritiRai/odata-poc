@@ -1,4 +1,4 @@
-package com.cairone.odataexample;
+package com.cairone.olingo.ext.jpa.enums;
 
 import org.apache.olingo.server.api.uri.queryoption.expression.BinaryOperatorKind;
 

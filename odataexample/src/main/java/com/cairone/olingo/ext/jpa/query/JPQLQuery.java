@@ -1,4 +1,4 @@
-package com.cairone.odataexample;
+package com.cairone.olingo.ext.jpa.query;
 
 import java.util.Map;
 

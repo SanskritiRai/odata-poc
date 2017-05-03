@@ -4,14 +4,14 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.cairone.odataexample.OdataexampleEdmProvider;
-import com.cairone.odataexample.annotations.EdmEntity;
-import com.cairone.odataexample.annotations.EdmEntitySet;
-import com.cairone.odataexample.annotations.EdmNavigationProperty;
-import com.cairone.odataexample.annotations.EdmProperty;
-import com.cairone.odataexample.annotations.ODataJPAEntity;
-import com.cairone.odataexample.annotations.ODataJPAProperty;
 import com.cairone.odataexample.entities.PersonaEntity;
+import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
+import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
+import com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty;
+import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
+import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
+import com.cairone.olingo.ext.jpa.annotations.ODataJPAProperty;
+import com.cairone.olingo.ext.jpa.providers.OdataexampleEdmProvider;
 
 @EdmEntity(name = "Persona", key = { "tipoDocumentoId", "numeroDocumento" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Personas")

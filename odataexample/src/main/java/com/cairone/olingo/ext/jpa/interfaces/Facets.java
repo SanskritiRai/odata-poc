@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cairone.odataexample.utils;
+package com.cairone.olingo.ext.jpa.interfaces;
 
 /**
  * OData property facets.

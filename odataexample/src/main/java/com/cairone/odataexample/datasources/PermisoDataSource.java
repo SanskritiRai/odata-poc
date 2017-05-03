@@ -28,9 +28,9 @@ import org.springframework.stereotype.Component;
 
 import com.cairone.odataexample.edm.resources.PermisoEdm;
 import com.cairone.odataexample.entities.PermisoEntity;
-import com.cairone.odataexample.interfaces.DataSource;
-import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.PermisoService;
+import com.cairone.olingo.ext.jpa.interfaces.DataSource;
+import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
 
 @Component
 public class PermisoDataSource implements DataSourceProvider, DataSource {

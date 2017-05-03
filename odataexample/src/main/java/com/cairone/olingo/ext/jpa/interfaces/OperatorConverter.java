@@ -1,4 +1,4 @@
-package com.cairone.odataexample.interfaces;
+package com.cairone.olingo.ext.jpa.interfaces;
 
 public interface OperatorConverter<X,Y> {
 

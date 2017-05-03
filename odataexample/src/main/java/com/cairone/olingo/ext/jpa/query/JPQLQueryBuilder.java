@@ -1,4 +1,4 @@
-package com.cairone.odataexample;
+package com.cairone.olingo.ext.jpa.query;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -21,8 +21,9 @@ import org.apache.olingo.server.api.uri.queryoption.expression.Expression;
 import org.apache.olingo.server.api.uri.queryoption.expression.ExpressionVisitException;
 import org.apache.olingo.server.api.uri.queryoption.expression.Member;
 
-import com.cairone.odataexample.annotations.ODataJPAEntity;
-import com.cairone.odataexample.annotations.ODataJPAProperty;
+import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
+import com.cairone.olingo.ext.jpa.annotations.ODataJPAProperty;
+import com.cairone.olingo.ext.jpa.visitors.FilterExpressionVisitor;
 
 public final class JPQLQueryBuilder {
 
@@ -101,14 +102,14 @@ public final class JPQLQueryBuilder {
 	
 	private String substituteByJpaProperty(final Class<?> clazz, final String fieldName) {
 		for(Field field : clazz.getDeclaredFields()) {
-    		com.cairone.odataexample.annotations.EdmProperty annEdmProperty = field.getAnnotation(com.cairone.odataexample.annotations.EdmProperty.class);
+    		com.cairone.olingo.ext.jpa.annotations.EdmProperty annEdmProperty = field.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmProperty.class);
     		if(annEdmProperty != null && (annEdmProperty.name().equals(fieldName) || field.getName().equals(fieldName))) {
     			ODataJPAProperty oDataJPAProperty = field.getAnnotation(ODataJPAProperty.class);
     			if(oDataJPAProperty != null && !oDataJPAProperty.value().isEmpty()) {
     				return oDataJPAProperty.value();
     			}
     		}
-    		com.cairone.odataexample.annotations.EdmNavigationProperty annEdmNavigationProperty = field.getAnnotation(com.cairone.odataexample.annotations.EdmNavigationProperty.class);
+    		com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty annEdmNavigationProperty = field.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty.class);
     		if(annEdmNavigationProperty != null && (annEdmNavigationProperty.name().equals(fieldName) || field.getName().equals(fieldName))) {
     			ODataJPAProperty oDataJPAProperty = field.getAnnotation(ODataJPAProperty.class);
     			if(oDataJPAProperty != null && !oDataJPAProperty.value().isEmpty()) {
@@ -128,7 +129,7 @@ public final class JPQLQueryBuilder {
     				EdmNavigationProperty edmNavigationProperty = ((UriResourceNavigation) uriResource).getProperty();
     				String navPropName = edmNavigationProperty.getName();
     				for(Field field : clazz.getDeclaredFields()) {
-    					com.cairone.odataexample.annotations.EdmNavigationProperty annEdmNavigationProperty = field.getAnnotation(com.cairone.odataexample.annotations.EdmNavigationProperty.class);
+    					com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty annEdmNavigationProperty = field.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty.class);
     					if(annEdmNavigationProperty != null && (annEdmNavigationProperty.name().equals(navPropName) || field.getName().equals(navPropName))) {
     		    			ODataJPAProperty oDataJPAProperty = field.getAnnotation(ODataJPAProperty.class);
     		    			if(oDataJPAProperty != null && !oDataJPAProperty.value().isEmpty()) {

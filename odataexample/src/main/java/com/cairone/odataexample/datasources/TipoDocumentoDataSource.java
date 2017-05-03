@@ -30,11 +30,11 @@ import com.cairone.odataexample.dtos.TipoDocumentoFrmDto;
 import com.cairone.odataexample.dtos.validators.TipoDocumentoFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.TipoDocumentoEdm;
 import com.cairone.odataexample.entities.TipoDocumentoEntity;
-import com.cairone.odataexample.interfaces.DataSource;
-import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.TipoDocumentoService;
 import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
+import com.cairone.olingo.ext.jpa.interfaces.DataSource;
+import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
 
 @Component
 public class TipoDocumentoDataSource implements DataSourceProvider, DataSource {

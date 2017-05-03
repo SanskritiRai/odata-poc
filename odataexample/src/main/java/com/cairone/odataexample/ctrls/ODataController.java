@@ -14,8 +14,8 @@ import org.apache.olingo.server.api.ServiceMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.cairone.odataexample.OdataexampleEdmProvider;
-import com.cairone.odataexample.OdataexampleEntityProcessor;
+import com.cairone.olingo.ext.jpa.processors.OdataexampleEntityProcessor;
+import com.cairone.olingo.ext.jpa.providers.OdataexampleEdmProvider;
 
 @Component 
 public class ODataController extends HttpServlet {

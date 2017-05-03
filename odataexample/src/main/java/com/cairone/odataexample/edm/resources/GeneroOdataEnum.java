@@ -1,8 +1,8 @@
 package com.cairone.odataexample.edm.resources;
 
-import com.cairone.odataexample.annotations.EdmEnum;
 import com.cairone.odataexample.enums.GeneroEnum;
-import com.cairone.odataexample.interfaces.OdataEnum;
+import com.cairone.olingo.ext.jpa.annotations.EdmEnum;
+import com.cairone.olingo.ext.jpa.interfaces.OdataEnum;
 
 
 @EdmEnum(name="genero")

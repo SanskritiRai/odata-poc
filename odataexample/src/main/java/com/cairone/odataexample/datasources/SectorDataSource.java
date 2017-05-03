@@ -30,11 +30,11 @@ import com.cairone.odataexample.dtos.SectorFrmDto;
 import com.cairone.odataexample.dtos.validators.SectorFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.SectorEdm;
 import com.cairone.odataexample.entities.SectorEntity;
-import com.cairone.odataexample.interfaces.DataSource;
-import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.SectorService;
 import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
+import com.cairone.olingo.ext.jpa.interfaces.DataSource;
+import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
 
 @Component
 public class SectorDataSource implements DataSourceProvider, DataSource {

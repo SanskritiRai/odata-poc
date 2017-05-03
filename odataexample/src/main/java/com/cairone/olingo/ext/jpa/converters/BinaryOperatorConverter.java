@@ -1,8 +1,8 @@
-package com.cairone.odataexample.converters;
+package com.cairone.olingo.ext.jpa.converters;
 
 import org.apache.olingo.server.api.uri.queryoption.expression.BinaryOperatorKind;
 
-import com.cairone.odataexample.interfaces.OperatorConverter;
+import com.cairone.olingo.ext.jpa.interfaces.OperatorConverter;
 
 public class BinaryOperatorConverter implements OperatorConverter<BinaryOperatorKind, String> {
 

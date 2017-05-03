@@ -1,13 +1,13 @@
 package com.cairone.odataexample.edm.resources;
 
-import com.cairone.odataexample.OdataexampleEdmProvider;
-import com.cairone.odataexample.annotations.EdmEntity;
-import com.cairone.odataexample.annotations.EdmEntitySet;
-import com.cairone.odataexample.annotations.EdmNavigationProperty;
-import com.cairone.odataexample.annotations.EdmProperty;
-import com.cairone.odataexample.annotations.ODataJPAEntity;
-import com.cairone.odataexample.annotations.ODataJPAProperty;
 import com.cairone.odataexample.entities.ProvinciaEntity;
+import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
+import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
+import com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty;
+import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
+import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
+import com.cairone.olingo.ext.jpa.annotations.ODataJPAProperty;
+import com.cairone.olingo.ext.jpa.providers.OdataexampleEdmProvider;
 
 @EdmEntity(name = "Provincia", key = { "paisId", "id" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Provincias")

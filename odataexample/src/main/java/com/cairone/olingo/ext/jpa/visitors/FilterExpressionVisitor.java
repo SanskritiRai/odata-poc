@@ -1,4 +1,4 @@
-package com.cairone.odataexample;
+package com.cairone.olingo.ext.jpa.visitors;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -23,9 +23,10 @@ import org.apache.olingo.server.api.uri.queryoption.expression.UnaryOperatorKind
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cairone.odataexample.annotations.EdmProperty;
-import com.cairone.odataexample.annotations.ODataJPAProperty;
-import com.cairone.odataexample.converters.BinaryOperatorConverter;
+import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
+import com.cairone.olingo.ext.jpa.annotations.ODataJPAProperty;
+import com.cairone.olingo.ext.jpa.converters.BinaryOperatorConverter;
+import com.cairone.olingo.ext.jpa.enums.BinaryOperatorGroup;
 import com.google.common.base.CharMatcher;
 import com.google.common.primitives.Ints;
 

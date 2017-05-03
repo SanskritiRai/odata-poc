@@ -1,4 +1,4 @@
-package com.cairone.odataexample;
+package com.cairone.olingo.ext.jpa.providers;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -40,15 +40,13 @@ import org.apache.olingo.server.api.ODataApplicationException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.stereotype.Component;
 
-import com.cairone.odataexample.annotations.EdmEntity;
-import com.cairone.odataexample.annotations.EdmEntitySet;
-import com.cairone.odataexample.annotations.EdmEnum;
-import com.cairone.odataexample.annotations.EdmNavigationProperty;
-import com.cairone.odataexample.annotations.EdmProperty;
+import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
+import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
+import com.cairone.olingo.ext.jpa.annotations.EdmEnum;
+import com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty;
+import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 
-@Component
 public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 
 	public static final String NAME_SPACE = "com.cairone.odataexample";

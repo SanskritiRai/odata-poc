@@ -1,4 +1,4 @@
-package com.cairone.odataexample.interfaces;
+package com.cairone.olingo.ext.jpa.interfaces;
 
 import java.util.Map;
 

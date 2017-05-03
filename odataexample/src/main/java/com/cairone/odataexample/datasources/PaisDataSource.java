@@ -22,17 +22,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
-import com.cairone.odataexample.JPQLQuery;
-import com.cairone.odataexample.JPQLQueryBuilder;
 import com.cairone.odataexample.dtos.PaisFrmDto;
 import com.cairone.odataexample.dtos.validators.PaisFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.PaisEdm;
 import com.cairone.odataexample.entities.PaisEntity;
-import com.cairone.odataexample.interfaces.DataSource;
-import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.PaisService;
 import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
+import com.cairone.olingo.ext.jpa.interfaces.DataSource;
+import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
+import com.cairone.olingo.ext.jpa.query.JPQLQuery;
+import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 
 @Component
 public class PaisDataSource implements DataSource, DataSourceProvider {

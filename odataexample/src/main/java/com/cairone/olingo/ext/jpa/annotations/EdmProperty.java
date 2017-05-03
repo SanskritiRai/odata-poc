@@ -1,11 +1,11 @@
-package com.cairone.odataexample.annotations;
+package com.cairone.olingo.ext.jpa.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.cairone.odataexample.utils.Facets;
+import com.cairone.olingo.ext.jpa.interfaces.Facets;
 
 /**
  * Indicates that this field is a property in a complex type or an entity type.

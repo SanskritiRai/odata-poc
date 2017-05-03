@@ -1,4 +1,4 @@
-package com.cairone.odataexample;
+package com.cairone.olingo.ext.jpa.processors;
 
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -68,19 +68,15 @@ import org.apache.olingo.server.api.uri.queryoption.TopOption;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.stereotype.Component;
 
-import com.cairone.odataexample.annotations.EdmEntity;
-import com.cairone.odataexample.dtos.validators.PaisFrmDtoValidator;
-import com.cairone.odataexample.interfaces.DataSource;
-import com.cairone.odataexample.interfaces.DataSourceProvider;
-import com.cairone.odataexample.services.PaisService;
+import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
+import com.cairone.olingo.ext.jpa.interfaces.DataSource;
+import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
+import com.cairone.olingo.ext.jpa.providers.OdataexampleEdmProvider;
 import com.google.common.collect.Iterables;
 
-@Component
 public class OdataexampleEntityProcessor implements EntityProcessor, EntityCollectionProcessor {
 
 	private OData odata;
@@ -88,12 +84,6 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 	
 	private Map<String, DataSourceProvider> dataSourceProviderMap = new HashMap<>();
 	private Map<String, Class<?>> entitySetMap = new HashMap<>();
-	
-	@Autowired private PaisService paisService = null;
-	@Autowired private PaisFrmDtoValidator paisFrmDtoValidator = null;
-	
-	@Autowired
-	private MessageSource messageSource = null;
 	
 	@Autowired
 	private ApplicationContext context = null;
@@ -114,14 +104,14 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 				dataSourceProviderMap.put(dataSourceProvider.isSuitableFor(), dataSourceProvider);
 			});
 
-		ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(com.cairone.odataexample.annotations.EdmEntitySet.class));
+		ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(com.cairone.olingo.ext.jpa.annotations.EdmEntitySet.class));
 		Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(OdataexampleEdmProvider.DEFAULT_EDM_PACKAGE);
 
 		try {
 			for(BeanDefinition beanDef : beanDefinitions) {
 				Class<?> cl = Class.forName(beanDef.getBeanClassName());
 				
-				com.cairone.odataexample.annotations.EdmEntitySet edmEntitySet = cl.getAnnotation(com.cairone.odataexample.annotations.EdmEntitySet.class);
+				com.cairone.olingo.ext.jpa.annotations.EdmEntitySet edmEntitySet = cl.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmEntitySet.class);
 				
 				if(edmEntitySet != null) {
 					entitySetMap.put(edmEntitySet.value(), cl);
@@ -184,7 +174,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 	    	createdObject = dataSource.create(object);
 	    	for(Field fld : createdObject.getClass().getDeclaredFields()) {
 	    		
-	    		com.cairone.odataexample.annotations.EdmProperty edmProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmProperty.class);
+	    		com.cairone.olingo.ext.jpa.annotations.EdmProperty edmProperty = fld.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmProperty.class);
 				
 	            if (edmProperty != null) {
 	            	
@@ -509,8 +499,8 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		Entity entity = new Entity();
 		Class<?> clazz = object.getClass();
 		
-		com.cairone.odataexample.annotations.EdmEntitySet edmEntitySet = clazz.getAnnotation(com.cairone.odataexample.annotations.EdmEntitySet.class);
-		com.cairone.odataexample.annotations.EdmEntity edmEntity = clazz.getAnnotation(com.cairone.odataexample.annotations.EdmEntity.class);
+		com.cairone.olingo.ext.jpa.annotations.EdmEntitySet edmEntitySet = clazz.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmEntitySet.class);
+		com.cairone.olingo.ext.jpa.annotations.EdmEntity edmEntity = clazz.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmEntity.class);
 		
 		String edmEntitySetName = edmEntitySet.value().isEmpty() ? clazz.getSimpleName() : edmEntitySet.value();
 		
@@ -533,7 +523,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		
 		for(Field fld : object.getClass().getDeclaredFields()) {
 
-    		com.cairone.odataexample.annotations.EdmProperty edmProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmProperty.class);
+    		com.cairone.olingo.ext.jpa.annotations.EdmProperty edmProperty = fld.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmProperty.class);
 			
             if (edmProperty != null) {
             	
@@ -574,7 +564,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
             	}
             }
             
-            com.cairone.odataexample.annotations.EdmNavigationProperty edmNavigationProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmNavigationProperty.class);
+            com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty edmNavigationProperty = fld.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty.class);
 			
             if(edmNavigationProperty != null) {
             	
@@ -635,7 +625,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		
 		for (Field fld : clazz.getDeclaredFields()) {
 			
-			com.cairone.odataexample.annotations.EdmProperty edmProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmProperty.class);
+			com.cairone.olingo.ext.jpa.annotations.EdmProperty edmProperty = fld.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmProperty.class);
 			
 			if (edmProperty != null) {
             	
@@ -645,7 +635,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
             	if(property != null) {
             		
     				Class<?> fldClazz = fld.getType();
-    				com.cairone.odataexample.annotations.EdmEnum edmEnum = fldClazz.getAnnotation(com.cairone.odataexample.annotations.EdmEnum.class);
+    				com.cairone.olingo.ext.jpa.annotations.EdmEnum edmEnum = fldClazz.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmEnum.class);
     				
     				if(edmEnum != null) {
     					
@@ -677,7 +667,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
             	}
             }
 			
-			com.cairone.odataexample.annotations.EdmNavigationProperty edmNavigationProperty = fld.getAnnotation(com.cairone.odataexample.annotations.EdmNavigationProperty.class);
+			com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty edmNavigationProperty = fld.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty.class);
 			
         	if(edmNavigationProperty != null) {
         		
@@ -692,7 +682,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 					fld.setAccessible(true);
 					Object navpropField = fld.get(object);
 
-					com.cairone.odataexample.annotations.EdmEntitySet targetEdmEntitySet = fieldClass.getAnnotation(com.cairone.odataexample.annotations.EdmEntitySet.class);
+					com.cairone.olingo.ext.jpa.annotations.EdmEntitySet targetEdmEntitySet = fieldClass.getAnnotation(com.cairone.olingo.ext.jpa.annotations.EdmEntitySet.class);
 					String targetEntitySetName = targetEdmEntitySet.value();
 					Class<?> cl = entitySetMap.get(targetEntitySetName);
 

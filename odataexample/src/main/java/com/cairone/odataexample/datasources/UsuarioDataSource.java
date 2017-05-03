@@ -30,11 +30,11 @@ import com.cairone.odataexample.dtos.UsuarioFrmDto;
 import com.cairone.odataexample.dtos.validators.UsuarioFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.UsuarioEdm;
 import com.cairone.odataexample.entities.UsuarioEntity;
-import com.cairone.odataexample.interfaces.DataSource;
-import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.UsuarioService;
 import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
+import com.cairone.olingo.ext.jpa.interfaces.DataSource;
+import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
 import com.google.common.base.CharMatcher;
 
 @Component

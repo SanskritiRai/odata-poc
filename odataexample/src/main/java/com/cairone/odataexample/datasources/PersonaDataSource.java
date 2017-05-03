@@ -22,19 +22,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
-import com.cairone.odataexample.JPQLQuery;
-import com.cairone.odataexample.JPQLQueryBuilder;
 import com.cairone.odataexample.dtos.PersonaFrmDto;
 import com.cairone.odataexample.dtos.validators.PersonaFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.PersonaEdm;
 import com.cairone.odataexample.entities.LocalidadEntity;
 import com.cairone.odataexample.entities.PersonaEntity;
-import com.cairone.odataexample.interfaces.DataSource;
-import com.cairone.odataexample.interfaces.DataSourceProvider;
 import com.cairone.odataexample.services.LocalidadService;
 import com.cairone.odataexample.services.PersonaService;
 import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
+import com.cairone.olingo.ext.jpa.interfaces.DataSource;
+import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
+import com.cairone.olingo.ext.jpa.query.JPQLQuery;
+import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 import com.google.common.base.CharMatcher;
 
 @Component
