@@ -22,8 +22,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.ContextURL.Suffix;
 import org.apache.olingo.commons.api.data.Entity;
@@ -65,7 +63,6 @@ import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
 import org.apache.olingo.server.api.uri.queryoption.SkipOption;
 import org.apache.olingo.server.api.uri.queryoption.TopOption;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -74,19 +71,18 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
-import com.cairone.olingo.ext.jpa.providers.OdataexampleEdmProvider;
 import com.google.common.collect.Iterables;
 
 public class OdataexampleEntityProcessor implements EntityProcessor, EntityCollectionProcessor {
 
+	private String SERVICE_ROOT = null;
+	private String DEFAULT_EDM_PACKAGE = null;
+	
 	private OData odata;
 	private ServiceMetadata serviceMetadata;
 	
 	private Map<String, DataSourceProvider> dataSourceProviderMap = new HashMap<>();
 	private Map<String, Class<?>> entitySetMap = new HashMap<>();
-	
-	@Autowired
-	private ApplicationContext context = null;
 	
 	@Override
 	public void init(OData odata, ServiceMetadata serviceMetadata) {
@@ -94,8 +90,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		this.serviceMetadata = serviceMetadata;
 	}
 	
-	@PostConstruct
-	public void init() throws ODataApplicationException {
+	public OdataexampleEntityProcessor initialize(ApplicationContext context) throws ODataApplicationException {
 		
 		context.getBeansOfType(DataSourceProvider.class).entrySet()
 			.stream()
@@ -105,7 +100,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 			});
 
 		ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(com.cairone.olingo.ext.jpa.annotations.EdmEntitySet.class));
-		Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(OdataexampleEdmProvider.DEFAULT_EDM_PACKAGE);
+		Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(DEFAULT_EDM_PACKAGE);
 
 		try {
 			for(BeanDefinition beanDef : beanDefinitions) {
@@ -120,6 +115,8 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		} catch (ClassNotFoundException e) {
 			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
 		}
+		
+		return this;
 	}
 
 	@Override
@@ -226,7 +223,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 	    ContextURL contextUrl = null;
 		try {
 			contextUrl = ContextURL.with()
-					.serviceRoot(new URI(OdataexampleEdmProvider.SERVICE_ROOT))
+					.serviceRoot(new URI(SERVICE_ROOT))
 					.entitySet(edmEntitySet)
 					.suffix(Suffix.ENTITY)
 					.build();
@@ -385,7 +382,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 	    ContextURL contextUrl = null;
 		try {
 			contextUrl = ContextURL.with()
-					.serviceRoot(new URI(OdataexampleEdmProvider.SERVICE_ROOT))
+					.serviceRoot(new URI(SERVICE_ROOT))
 					.entitySet(edmEntitySet)
 					.selectList(selectList)
 					.suffix(Suffix.ENTITY)
@@ -463,7 +460,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 	    ContextURL contextUrl = null;
 		try {
 			contextUrl = ContextURL.with()
-					.serviceRoot(new URI(OdataexampleEdmProvider.SERVICE_ROOT))
+					.serviceRoot(new URI(SERVICE_ROOT))
 					.entitySet(edmEntitySet)
 					.selectList(selectList)
 					.build();
@@ -487,7 +484,25 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		response.setStatusCode(HttpStatusCode.OK.getStatusCode());
 		response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
 	}
-	
+
+	public String getServiceRoot() {
+		return SERVICE_ROOT;
+	}
+
+	public OdataexampleEntityProcessor setServiceRoot(String ServiceRoot) {
+		SERVICE_ROOT = ServiceRoot;
+		return this;
+	}
+
+	public String getDefaultEdmPackage() {
+		return DEFAULT_EDM_PACKAGE;
+	}
+
+	public OdataexampleEntityProcessor setDefaultEdmPackage(String DefaultEdmPackage) {
+		DEFAULT_EDM_PACKAGE = DefaultEdmPackage;
+		return this;
+	}
+
 	private ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotationTypes) {
 		ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
 		for(Class<? extends Annotation> annotationType : annotationTypes) provider.addIncludeFilter(new AnnotationTypeFilter(annotationType));

@@ -1,13 +1,13 @@
 package com.cairone.odataexample.edm.resources;
 
+import com.cairone.odataexample.OdataExample;
 import com.cairone.odataexample.entities.PaisEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
 import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
-import com.cairone.olingo.ext.jpa.providers.OdataexampleEdmProvider;
 
-@EdmEntity(name = "Pais", key = "id", namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
+@EdmEntity(name = "Pais", key = "id", namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
 @EdmEntitySet("Paises")
 @ODataJPAEntity("PaisEntity")
 public class PaisEdm {

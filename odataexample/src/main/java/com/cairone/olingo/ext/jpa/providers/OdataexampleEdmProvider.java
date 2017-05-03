@@ -18,8 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.CsdlAbstractEdmProvider;
@@ -49,17 +47,16 @@ import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 
 public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 
-	public static final String NAME_SPACE = "com.cairone.odataexample";
-	public static final String CONTAINER_NAME = "ODataExample";
-	public static final String SERVICE_ROOT = "http://localhost:8080/odata/appexample.svc/";
-	public static final String DEFAULT_EDM_PACKAGE = "com.cairone.odataexample.edm.resources";
+	private String NAME_SPACE = null;
+	private String CONTAINER_NAME = null;
+	private String SERVICE_ROOT = null;
+	private String DEFAULT_EDM_PACKAGE = null;
 	
 	private HashMap<String, Class<?>> entitySetsMap = new HashMap<String, Class<?>>();
 	private HashMap<String, Class<?>> enumsMap = new HashMap<String, Class<?>>();
 	private HashMap<String, String> entityTypesMap = new HashMap<>();
 	
-	@PostConstruct
-	public void init() throws ODataApplicationException {
+	public OdataexampleEdmProvider initialize() throws ODataApplicationException {
 
 		ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(EdmEntitySet.class, EdmEnum.class));
 		Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(DEFAULT_EDM_PACKAGE);
@@ -88,6 +85,8 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
 		} catch (ClassNotFoundException e) {
 			throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
 		}
+		
+		return this;
 	}
 	
 	@Override
@@ -384,6 +383,42 @@ public class OdataexampleEdmProvider extends CsdlAbstractEdmProvider {
     		.setNavigationProperties(csdlNavigationProperties);
 
 		return entityType;
+	}
+
+	public String getNameSpace() {
+		return NAME_SPACE;
+	}
+
+	public OdataexampleEdmProvider setNameSpace(String NameSpace) {
+		this.NAME_SPACE = NameSpace;
+		return this;
+	}
+
+	public String getContainerName() {
+		return CONTAINER_NAME;
+	}
+
+	public OdataexampleEdmProvider setContainerName(String containerName) {
+		CONTAINER_NAME = containerName;
+		return this;
+	}
+
+	public String getServiceRoot() {
+		return SERVICE_ROOT;
+	}
+
+	public OdataexampleEdmProvider setServiceRoot(String ServiceRoot) {
+		SERVICE_ROOT = ServiceRoot;
+		return this;
+	}
+
+	public String getDefaultEdmPackage() {
+		return DEFAULT_EDM_PACKAGE;
+	}
+
+	public OdataexampleEdmProvider setDefaultEdmPackage(String DefaultEdmPackage) {
+		DEFAULT_EDM_PACKAGE = DefaultEdmPackage;
+		return this;
 	}
 
 	private FullQualifiedName getFullQualifiedName(String namespace, String name) {

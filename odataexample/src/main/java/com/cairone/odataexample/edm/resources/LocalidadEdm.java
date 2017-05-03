@@ -1,5 +1,6 @@
 package com.cairone.odataexample.edm.resources;
 
+import com.cairone.odataexample.OdataExample;
 import com.cairone.odataexample.entities.LocalidadEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
@@ -7,9 +8,8 @@ import com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty;
 import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
 import com.cairone.olingo.ext.jpa.annotations.ODataJPAProperty;
-import com.cairone.olingo.ext.jpa.providers.OdataexampleEdmProvider;
 
-@EdmEntity(name = "Localidad", key = { "paisId", "provinciaId", "localidadId" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
+@EdmEntity(name = "Localidad", key = { "paisId", "provinciaId", "localidadId" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
 @EdmEntitySet("Localidades")
 @ODataJPAEntity("LocalidadEntity")
 public class LocalidadEdm {
