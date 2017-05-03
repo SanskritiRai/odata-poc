@@ -9,7 +9,7 @@ import com.cairone.odataexample.entities.PaisEntity;
 
 @EdmEntity(name = "Pais", key = "id", namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Paises")
-@ODataJPAEntity("com.cairone.odataexample.entities.PaisEntity")
+@ODataJPAEntity("PaisEntity")
 public class PaisEdm {
 
 	@EdmProperty(name="id", nullable = false)

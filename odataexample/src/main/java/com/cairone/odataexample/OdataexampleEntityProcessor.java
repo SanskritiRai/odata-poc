@@ -60,6 +60,7 @@ import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceNavigation;
 import org.apache.olingo.server.api.uri.queryoption.CountOption;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
+import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
 import org.apache.olingo.server.api.uri.queryoption.SkipOption;
@@ -428,6 +429,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 	    SkipOption skipOption = uriInfo.getSkipOption();
 	    TopOption topOption = uriInfo.getTopOption();
 	    OrderByOption orderByOption = uriInfo.getOrderByOption();
+	    FilterOption filterOption = uriInfo.getFilterOption();
 	    
 	    String selectList = odata.createUriHelper().buildContextURLSelectList(edmEntityType, null, selectOption);
 	    boolean count = countOption == null ? false : countOption.getValue();
@@ -445,7 +447,7 @@ public class OdataexampleEntityProcessor implements EntityProcessor, EntityColle
 		List<Entity> result = entityCollection.getEntities();
 		
 		try {
-			Iterable<?> data = dataSourceProvider.readAll(orderByOption);
+			Iterable<?> data = dataSourceProvider.readAll(expandOption, filterOption, orderByOption);
 			
 			if(count) entityCollection.setCount(Iterables.size(data));
 			

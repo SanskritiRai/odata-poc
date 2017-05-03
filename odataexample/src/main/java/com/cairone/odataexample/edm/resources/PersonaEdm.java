@@ -15,7 +15,7 @@ import com.cairone.odataexample.entities.PersonaEntity;
 
 @EdmEntity(name = "Persona", key = { "tipoDocumentoId", "numeroDocumento" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Personas")
-@ODataJPAEntity("com.cairone.odataexample.entities.PersonaEntity")
+@ODataJPAEntity("PersonaEntity")
 public class PersonaEdm {
 
 	@EdmProperty(name="tipoDocumentoId", nullable = false) @ODataJPAProperty("tipoDocumento.id")

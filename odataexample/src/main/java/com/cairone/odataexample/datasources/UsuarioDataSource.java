@@ -14,6 +14,8 @@ import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.UriResource;
 import org.apache.olingo.server.api.uri.UriResourcePrimitiveProperty;
+import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
+import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.expression.Expression;
 import org.apache.olingo.server.api.uri.queryoption.expression.Member;
@@ -180,7 +182,7 @@ public class UsuarioDataSource implements DataSourceProvider, DataSource {
 	}
 	
 	@Override
-	public Iterable<?> readAll(OrderByOption orderByOption) throws ODataException {
+	public Iterable<?> readAll(ExpandOption expandOption, FilterOption filterOption, OrderByOption orderByOption) throws ODataException {
 
 		List<Sort.Order> orderByList = new ArrayList<Sort.Order>();
 		

@@ -11,7 +11,7 @@ import com.cairone.odataexample.entities.LocalidadEntity;
 
 @EdmEntity(name = "Localidad", key = { "paisId", "provinciaId", "localidadId" }, namespace = OdataexampleEdmProvider.NAME_SPACE, containerName = OdataexampleEdmProvider.CONTAINER_NAME)
 @EdmEntitySet("Localidades")
-@ODataJPAEntity("com.cairone.odataexample.entities.LocalidadEntity")
+@ODataJPAEntity("LocalidadEntity")
 public class LocalidadEdm {
 
 	@EdmProperty(name="paisId", nullable = false) @ODataJPAProperty("provincia.pais.id")
