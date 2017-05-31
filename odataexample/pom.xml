@@ -42,20 +42,20 @@
 		
 		<!-- QUERYDSL -->
 		<dependency>
-		<groupId>com.mysema.querydsl</groupId>
-		<artifactId>querydsl-core</artifactId>
-		<version>${querydsl.version}</version>
-	</dependency>
-	<dependency>
-    	<groupId>com.mysema.querydsl</groupId>
-		<artifactId>querydsl-apt</artifactId>
-		<version>${querydsl.version}</version>
-	</dependency>
-	<dependency>
-		<groupId>com.mysema.querydsl</groupId>
-		<artifactId>querydsl-jpa</artifactId>
-		<version>${querydsl.version}</version>
-	</dependency>
+			<groupId>com.mysema.querydsl</groupId>
+			<artifactId>querydsl-core</artifactId>
+			<version>${querydsl.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.mysema.querydsl</groupId>
+			<artifactId>querydsl-apt</artifactId>
+			<version>${querydsl.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.mysema.querydsl</groupId>
+			<artifactId>querydsl-jpa</artifactId>
+			<version>${querydsl.version}</version>
+		</dependency>
 		
 		<!-- JDBC -->
 		<!-- 
@@ -70,6 +70,7 @@
 			<version>1.3.1</version>
 			</dependency>
 		
+		<!-- APACHE OLINGO -->
 		<dependency>
 			<groupId>org.apache.olingo</groupId>
 			<artifactId>odata-server-api</artifactId>
@@ -92,6 +93,19 @@
 			<version>${odata.version}</version>
 		</dependency>
 		
+		<!-- OLINGO JPA EXTENSION -->
+		<dependency>
+			<groupId>com.cairone</groupId>
+			<artifactId>olingo-odata4-jpa</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	
+		<dependency>
+		    <groupId>com.google.guava</groupId>
+		    <artifactId>guava</artifactId>
+		    <version>18.0</version>
+		</dependency>
+
 	</dependencies>
 	
   <build>
@@ -131,5 +145,5 @@
 		</plugin>
        </plugins>
    </build>
-   
+
 </project>

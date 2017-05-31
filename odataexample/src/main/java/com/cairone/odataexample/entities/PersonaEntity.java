@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -52,7 +51,10 @@ public class PersonaEntity implements Serializable {
 	@Column(name="genero", nullable = false, length = 1)
 	private GeneroEnum genero = null;
 	
-	@OneToMany(cascade=CascadeType.ALL, mappedBy="persona", fetch=FetchType.EAGER)
+	@Column(name="uuid_foto", nullable = true, length = 36)
+	private String fotoUUID = null;
+	
+	@OneToMany(orphanRemoval=true, mappedBy="persona", fetch=FetchType.EAGER)
 	private List<PersonaSectorEntity> personaSectorEntities = null;
 	
 	public PersonaEntity() {
@@ -129,6 +131,14 @@ public class PersonaEntity implements Serializable {
 
 	public void setGenero(GeneroEnum genero) {
 		this.genero = genero;
+	}
+
+	public String getFotoUUID() {
+		return fotoUUID;
+	}
+
+	public void setFotoUUID(String fotoUUID) {
+		this.fotoUUID = fotoUUID;
 	}
 
 	public List<PersonaSectorEntity> getPersonaSectorEntities() {

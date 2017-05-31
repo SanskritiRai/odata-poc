@@ -5,9 +5,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Query;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -16,8 +14,6 @@ import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
@@ -32,15 +28,12 @@ import com.cairone.odataexample.services.PersonaService;
 import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
 import com.cairone.olingo.ext.jpa.interfaces.DataSource;
-import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 import com.google.common.base.CharMatcher;
 
 @Component
-public class PersonaDataSource implements DataSourceProvider, DataSource {
-
-	private static Logger logger = LoggerFactory.getLogger(PersonaDataSource.class);
+public class PersonaDataSource implements DataSource {
 
 	private static final String ENTITY_SET_NAME = "Personas";
 	
@@ -185,11 +178,6 @@ public class PersonaDataSource implements DataSourceProvider, DataSource {
 	}
 
 	@Override
-	public DataSource getDataSource() {
-		return this;
-	}
-
-	@Override
 	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
 		
 		Integer tipoDocumentoID = Integer.valueOf( keyPredicateMap.get("tipoDocumentoId").getText() );
@@ -212,34 +200,9 @@ public class PersonaDataSource implements DataSourceProvider, DataSource {
 			.setOrderByOption(orderByOption)
 			.build();
 	
-		List<PersonaEntity> personaEntities = executeQueryListResult(query);
+		List<PersonaEntity> personaEntities = JPQLQuery.execute(entityManagerFactory, query);
 		List<PersonaEdm> personaEdms = personaEntities.stream().map(entity -> { return new PersonaEdm(entity); }).collect(Collectors.toList());
 		
 		return personaEdms;
 	}
-
-    @SuppressWarnings("unchecked")
-	protected <T> List<T> executeQueryListResult(JPQLQuery jpaQuery) {
-
-        EntityManager em = entityManagerFactory.createEntityManager();
-
-        String queryString = jpaQuery.getQueryString();
-
-    	logger.info("JPQL: {}", queryString);
-    	
-        Query query = em.createQuery(queryString);
-        Map<String, Object> queryParams = jpaQuery.getQueryParams();
-
-        try {
-        	em.getTransaction().begin();
-
-            for (Map.Entry<String, Object> entry : queryParams.entrySet()) {
-                query.setParameter(entry.getKey(), entry.getValue());
-            }
-
-            return query.getResultList();
-        } finally {
-            em.close();
-        }
-    }
 }

@@ -5,9 +5,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Query;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -16,8 +14,6 @@ import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
@@ -30,14 +26,11 @@ import com.cairone.odataexample.services.ProvinciaService;
 import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
 import com.cairone.olingo.ext.jpa.interfaces.DataSource;
-import com.cairone.olingo.ext.jpa.interfaces.DataSourceProvider;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 
 @Component
-public class ProvinciaDataSource implements DataSourceProvider, DataSource {
-
-	private static Logger logger = LoggerFactory.getLogger(ProvinciaDataSource.class);
+public class ProvinciaDataSource implements DataSource {
 	
 	private static final String ENTITY_SET_NAME = "Provincias";
 	
@@ -57,7 +50,7 @@ public class ProvinciaDataSource implements DataSourceProvider, DataSource {
 			
 			ProvinciaEdm provinciaEdm = (ProvinciaEdm) entity;
 			ProvinciaFrmDto provinciaFrmDto = new ProvinciaFrmDto(provinciaEdm);
-
+			
 			try {
 				ValidatorUtil.validate(provinciaFrmDtoValidator, messageSource, provinciaFrmDto);
 				ProvinciaEntity provinciaEntity = provinciaService.nuevo(provinciaFrmDto);
@@ -124,7 +117,8 @@ public class ProvinciaDataSource implements DataSourceProvider, DataSource {
     	try {
 			provinciaService.borrar(paisID, provinciaID);
 		} catch (Exception e) {
-			throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
+			String message = SQLExceptionParser.parse(e);
+			throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
 		}
     	
     	return null;
@@ -133,11 +127,6 @@ public class ProvinciaDataSource implements DataSourceProvider, DataSource {
 	@Override
 	public String isSuitableFor() {
 		return ENTITY_SET_NAME;
-	}
-
-	@Override
-	public DataSource getDataSource() {
-		return this;
 	}
 
 	@Override
@@ -163,34 +152,9 @@ public class ProvinciaDataSource implements DataSourceProvider, DataSource {
 			.setOrderByOption(orderByOption)
 			.build();
 	
-		List<ProvinciaEntity> provinciaEntities = executeQueryListResult(query);
+		List<ProvinciaEntity> provinciaEntities = JPQLQuery.execute(entityManagerFactory, query);
 		List<ProvinciaEdm> provinciaEdms = provinciaEntities.stream().map(entity -> { return new ProvinciaEdm(entity); }).collect(Collectors.toList());
 		
 		return provinciaEdms;
 	}
-
-    @SuppressWarnings("unchecked")
-	protected <T> List<T> executeQueryListResult(JPQLQuery jpaQuery) {
-
-        EntityManager em = entityManagerFactory.createEntityManager();
-
-        String queryString = jpaQuery.getQueryString();
-
-    	logger.info("JPQL: {}", queryString);
-    	
-        Query query = em.createQuery(queryString);
-        Map<String, Object> queryParams = jpaQuery.getQueryParams();
-
-        try {
-        	em.getTransaction().begin();
-
-            for (Map.Entry<String, Object> entry : queryParams.entrySet()) {
-                query.setParameter(entry.getKey(), entry.getValue());
-            }
-
-            return query.getResultList();
-        } finally {
-            em.close();
-        }
-    }
 }

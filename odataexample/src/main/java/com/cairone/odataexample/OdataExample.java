@@ -10,8 +10,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import com.cairone.odataexample.ctrls.ODataController;
-import com.cairone.olingo.ext.jpa.processors.OdataexampleEntityProcessor;
-import com.cairone.olingo.ext.jpa.providers.OdataexampleEdmProvider;
+import com.cairone.olingo.ext.jpa.processors.ActionProcessor;
+import com.cairone.olingo.ext.jpa.processors.BatchRequestProcessor;
+import com.cairone.olingo.ext.jpa.processors.MediaProcessor;
+import com.cairone.olingo.ext.jpa.providers.EdmProvider;
 
 @SpringBootApplication
 public class OdataExample extends SpringBootServletInitializer
@@ -19,7 +21,7 @@ public class OdataExample extends SpringBootServletInitializer
 	public static final String NAME_SPACE = "com.cairone.odataexample";
 	public static final String CONTAINER_NAME = "ODataExample";
 	public static final String SERVICE_ROOT = "http://localhost:8080/odata/appexample.svc/";
-	public static final String DEFAULT_EDM_PACKAGE = "com.cairone.odataexample.edm.resources";
+	public static final String DEFAULT_EDM_PACKAGE = "com.cairone.odataexample.edm";
 	
     public static void main( String[] args ) {
         SpringApplication.run(OdataExample.class, args);
@@ -29,26 +31,36 @@ public class OdataExample extends SpringBootServletInitializer
     @Autowired ODataController dispatcherServlet = null;
     
     @Bean
-    public ServletRegistrationBean dispatcherServletRegistration() {
-    	ServletRegistrationBean registration = new ServletRegistrationBean(dispatcherServlet, "/odata/appexample.svc/*");
-    	return registration;
+    public MediaProcessor getMediaProcessor() throws ODataApplicationException {
+    	MediaProcessor mediaProcessor = new MediaProcessor()
+	    	.setDefaultEdmPackage(DEFAULT_EDM_PACKAGE)
+			.setServiceRoot(SERVICE_ROOT)
+			.initialize(context);
+    	
+    	return mediaProcessor;
     }
     
     @Bean
-    public OdataexampleEntityProcessor getOdataexampleEntityProcessor() throws ODataApplicationException {
+    public ActionProcessor getActionProcessor() throws ODataApplicationException {
     	
-    	OdataexampleEntityProcessor processor = new OdataexampleEntityProcessor()
+    	ActionProcessor processor = new ActionProcessor()
     		.setDefaultEdmPackage(DEFAULT_EDM_PACKAGE)
     		.setServiceRoot(SERVICE_ROOT)
     		.initialize(context);
     	
     	return processor;
     }
-
+    
     @Bean
-    public OdataexampleEdmProvider getOdataexampleEdmProvider() throws ODataApplicationException {
+    public BatchRequestProcessor getBatchRequestProcessor() {
+    	BatchRequestProcessor processor = new BatchRequestProcessor();
+    	return processor;
+    }
+    
+    @Bean
+    public EdmProvider getOdataexampleEdmProvider() throws ODataApplicationException {
     	
-    	OdataexampleEdmProvider provider = new OdataexampleEdmProvider()
+    	EdmProvider provider = new EdmProvider()
     		.setContainerName(CONTAINER_NAME)
     		.setDefaultEdmPackage(DEFAULT_EDM_PACKAGE)
     		.setNameSpace(NAME_SPACE)
@@ -56,5 +68,11 @@ public class OdataExample extends SpringBootServletInitializer
     		.initialize();
     	
     	return provider;
+    }
+
+    @Bean
+    public ServletRegistrationBean dispatcherServletRegistration() {
+    	ServletRegistrationBean registration = new ServletRegistrationBean(dispatcherServlet, "/odata/appexample.svc/*");
+    	return registration;
     }
 }

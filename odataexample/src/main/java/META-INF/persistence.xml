@@ -8,6 +8,7 @@
 		<class>com.cairone.odataexample.entities.PaisEntity</class>
 		<class>com.cairone.odataexample.entities.PermisoEntity</class>
 		<class>com.cairone.odataexample.entities.PersonaEntity</class>
+		<class>com.cairone.odataexample.entities.PersonaFotoEntity</class>
 		<class>com.cairone.odataexample.entities.PersonaPKEntity</class>
 		<class>com.cairone.odataexample.entities.PersonaSectorEntity</class>
 		<class>com.cairone.odataexample.entities.PersonaSectorPKEntity</class>
