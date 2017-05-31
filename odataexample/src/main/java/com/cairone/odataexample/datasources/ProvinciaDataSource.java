@@ -5,7 +5,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -40,8 +41,8 @@ public class ProvinciaDataSource implements DataSource {
 	@Autowired
 	private MessageSource messageSource = null;
 	
-	@Autowired
-    private EntityManagerFactory entityManagerFactory;
+	@PersistenceContext
+    private EntityManager entityManager;
 	
 	@Override
 	public Object create(Object entity) throws ODataException {
@@ -152,7 +153,7 @@ public class ProvinciaDataSource implements DataSource {
 			.setOrderByOption(orderByOption)
 			.build();
 	
-		List<ProvinciaEntity> provinciaEntities = JPQLQuery.execute(entityManagerFactory, query);
+		List<ProvinciaEntity> provinciaEntities = JPQLQuery.execute(entityManager, query);
 		List<ProvinciaEdm> provinciaEdms = provinciaEntities.stream().map(entity -> { return new ProvinciaEdm(entity); }).collect(Collectors.toList());
 		
 		return provinciaEdms;

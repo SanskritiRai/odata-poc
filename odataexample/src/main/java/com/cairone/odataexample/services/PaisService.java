@@ -2,7 +2,12 @@ package com.cairone.odataexample.services;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -16,11 +21,16 @@ import com.mysema.query.types.expr.BooleanExpression;
 
 @Service
 public class PaisService {
+	
+	private static Logger LOG = LoggerFactory.getLogger(PaisService.class);
+	private static final String CACHE_NAME = "paises";
 
 	@Autowired private PaisRepository paisRepository = null;
 
-	@Transactional(readOnly=true)
+	@Transactional(readOnly=true) @Cacheable(CACHE_NAME)
 	public PaisEntity buscarPorID(Integer paisID) {
+		
+		LOG.info(">>> BUSCANDO PAIS CON ID {}", paisID);
 		
 		PaisEntity paisEntity = paisRepository.findOne(paisID);
 		return paisEntity;
@@ -50,7 +60,7 @@ public class PaisService {
 		return pagePaisEntity;
 	}
 	
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#paisFrmDto.id")
 	public PaisEntity nuevo(PaisFrmDto paisFrmDto) {
 		
 		PaisEntity paisEntity = new PaisEntity();
@@ -61,10 +71,12 @@ public class PaisService {
 		
 		paisRepository.save(paisEntity);
 		
+		LOG.info(">>> NUEVO PAIS CREADO CON ID {}", paisEntity.getId());
+		
 		return paisEntity;
 	}
 
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#paisFrmDto.id")
 	public PaisEntity actualizar(PaisFrmDto paisFrmDto) throws Exception {
 		
 		if(paisFrmDto == null || paisFrmDto.getId() == null) {
@@ -85,7 +97,7 @@ public class PaisService {
 		return paisEntity;
 	}
 
-	@Transactional
+	@Transactional @CacheEvict(CACHE_NAME)
 	public void borrar(Integer paisID) throws Exception {
 		
 		PaisEntity paisEntity = paisRepository.findOne(paisID);

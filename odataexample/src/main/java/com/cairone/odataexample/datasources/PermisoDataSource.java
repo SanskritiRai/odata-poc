@@ -5,7 +5,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -33,8 +34,8 @@ public class PermisoDataSource implements DataSource {
 
 	@Autowired private PermisoService permisoService = null;
 
-	@Autowired
-    private EntityManagerFactory entityManagerFactory;
+	@PersistenceContext
+    private EntityManager entityManager;
 	
 	@Autowired
 	private MessageSource messageSource = null;
@@ -81,7 +82,7 @@ public class PermisoDataSource implements DataSource {
 			.setOrderByOption(orderByOption)
 			.build();
 
-		List<PermisoEntity> permisoEntities = JPQLQuery.execute(entityManagerFactory, query);
+		List<PermisoEntity> permisoEntities = JPQLQuery.execute(entityManager, query);
 		List<PermisoEdm> permisoEdms = permisoEntities.stream().map(entity -> { return new PermisoEdm(entity); }).collect(Collectors.toList());
 		
 		return permisoEdms;

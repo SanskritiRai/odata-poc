@@ -5,7 +5,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -38,8 +39,8 @@ public class PersonaFotoDataSource implements DataSource, MediaDataSource {
 	@Autowired
 	private MessageSource messageSource = null;
 
-	@Autowired
-    private EntityManagerFactory entityManagerFactory;
+	@PersistenceContext
+    private EntityManager entityManager;
 	
 	@Override
 	public String isSuitableFor() {
@@ -167,7 +168,7 @@ public class PersonaFotoDataSource implements DataSource, MediaDataSource {
 			.setOrderByOption(orderByOption)
 			.build();
 	
-		List<PersonaFotoEntity> personaFotoEntities = JPQLQuery.execute(entityManagerFactory, query);
+		List<PersonaFotoEntity> personaFotoEntities = JPQLQuery.execute(entityManager, query);
 		List<PersonaFotoEdm> personaFotoEdms = personaFotoEntities.stream().map(entity -> {
 			
 			PersonaEntity personaEntity = personaService.buscarPorFotoUUID(entity.getUuid());

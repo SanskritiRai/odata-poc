@@ -5,7 +5,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -38,8 +39,8 @@ public class UsuarioDataSource implements DataSource {
 	@Autowired private UsuarioService usuarioService = null;
 	@Autowired private UsuarioFrmDtoValidator usuarioFrmDtoValidator = null;
 
-	@Autowired
-    private EntityManagerFactory entityManagerFactory;
+	@PersistenceContext
+    private EntityManager entityManager;
 	
 	@Autowired
 	private MessageSource messageSource = null;
@@ -183,7 +184,7 @@ public class UsuarioDataSource implements DataSource {
 			.setOrderByOption(orderByOption)
 			.build();
 		
-		List<UsuarioEntity> usuarioEntities = JPQLQuery.execute(entityManagerFactory, query);
+		List<UsuarioEntity> usuarioEntities = JPQLQuery.execute(entityManager, query);
 		List<UsuarioEdm> usuarioEdms = usuarioEntities.stream().map(entity -> { return new UsuarioEdm(entity); }).collect(Collectors.toList());
 		
 		return usuarioEdms;

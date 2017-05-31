@@ -5,7 +5,7 @@ import com.cairone.odataexample.entities.PaisEntity;
 
 
 public class PaisFrmDto {
-
+	
 	private Integer id = null;
 	private String nombre= null;
 	private Integer prefijo = null;

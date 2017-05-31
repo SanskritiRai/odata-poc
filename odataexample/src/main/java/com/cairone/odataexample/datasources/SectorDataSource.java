@@ -5,7 +5,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -37,8 +38,8 @@ public class SectorDataSource implements DataSource {
 	@Autowired private SectorService sectorService = null;
 	@Autowired private SectorFrmDtoValidator sectorFrmDtoValidator = null;
 	
-	@Autowired
-    private EntityManagerFactory entityManagerFactory;
+	@PersistenceContext
+    private EntityManager entityManager;
 	
 	@Autowired
 	private MessageSource messageSource = null;
@@ -147,7 +148,7 @@ public class SectorDataSource implements DataSource {
 			.setOrderByOption(orderByOption)
 			.build();
 	
-		List<SectorEntity> sectorEntities = JPQLQuery.execute(entityManagerFactory, query);
+		List<SectorEntity> sectorEntities = JPQLQuery.execute(entityManager, query);
 		List<SectorEdm> sectorEdms = sectorEntities.stream().map(entity -> { return new SectorEdm(entity); }).collect(Collectors.toList());
 		
 		return sectorEdms;

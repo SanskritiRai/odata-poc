@@ -5,7 +5,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -37,8 +38,8 @@ public class TipoDocumentoDataSource implements DataSource {
 	@Autowired private TipoDocumentoService tipoDocumentoService = null;
 	@Autowired private TipoDocumentoFrmDtoValidator tipoDocumentoFrmDtoValidator = null;
 	
-	@Autowired
-    private EntityManagerFactory entityManagerFactory;
+	@PersistenceContext
+    private EntityManager entityManager;
 	
 	@Autowired
 	private MessageSource messageSource = null;
@@ -154,7 +155,7 @@ public class TipoDocumentoDataSource implements DataSource {
 			.setOrderByOption(orderByOption)
 			.build();
 	
-		List<TipoDocumentoEntity> tipoDocumentoEntities = JPQLQuery.execute(entityManagerFactory, query);
+		List<TipoDocumentoEntity> tipoDocumentoEntities = JPQLQuery.execute(entityManager, query);
 		List<TipoDocumentoEdm> sectorEdms = tipoDocumentoEntities.stream().map(entity -> { return new TipoDocumentoEdm(entity); }).collect(Collectors.toList());
 		
 		return sectorEdms;

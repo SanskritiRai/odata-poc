@@ -5,7 +5,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -44,8 +45,8 @@ public class PersonaDataSource implements DataSource {
 	@Autowired
 	private MessageSource messageSource = null;
 
-	@Autowired
-    private EntityManagerFactory entityManagerFactory;
+	@PersistenceContext
+    private EntityManager entityManager;
 
 	@Override
 	public Object create(Object entity) throws ODataException {
@@ -200,7 +201,7 @@ public class PersonaDataSource implements DataSource {
 			.setOrderByOption(orderByOption)
 			.build();
 	
-		List<PersonaEntity> personaEntities = JPQLQuery.execute(entityManagerFactory, query);
+		List<PersonaEntity> personaEntities = JPQLQuery.execute(entityManager, query);
 		List<PersonaEdm> personaEdms = personaEntities.stream().map(entity -> { return new PersonaEdm(entity); }).collect(Collectors.toList());
 		
 		return personaEdms;
