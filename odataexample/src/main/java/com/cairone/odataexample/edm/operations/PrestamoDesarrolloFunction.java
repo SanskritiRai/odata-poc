@@ -13,15 +13,15 @@ import com.cairone.odataexample.OdataExample;
 import com.cairone.odataexample.dtos.PrestamoDesarrolloParamFrmDto;
 import com.cairone.odataexample.edm.resources.PrestamoCuotaEdm;
 import com.cairone.odataexample.processes.DesarrolloPrestamoProcess;
-import com.cairone.olingo.ext.jpa.annotations.EdmAction;
+import com.cairone.olingo.ext.jpa.annotations.EdmFunction;
 import com.cairone.olingo.ext.jpa.annotations.EdmParameter;
 import com.cairone.olingo.ext.jpa.annotations.EdmReturnType;
 import com.cairone.olingo.ext.jpa.interfaces.Operation;
 
 @Component
-@EdmAction(namespace = OdataExample.NAME_SPACE, name = "PrestamoDesarrolloAction", isBound = false) 
+@EdmFunction(namespace = OdataExample.NAME_SPACE, name = "PrestamoDesarrolloFunction", isBound = false)
 @EdmReturnType(type = "Collection(PrestamoCuota)")
-public class PrestamoDesarrolloAction implements Operation<List<PrestamoCuotaEdm>>{
+public class PrestamoDesarrolloFunction implements Operation<List<PrestamoCuotaEdm>>{
 
 	@EdmParameter(nullable = false)
 	private BigDecimal prestamo = null;
