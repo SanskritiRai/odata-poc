@@ -1,5 +1,6 @@
 package com.cairone.odataexample.entities;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -9,7 +10,9 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 
 @Entity @Table(name="personas_fotos")
-public class PersonaFotoEntity {
+public class PersonaFotoEntity implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@Id @Column(name="uuid_foto")
 	private String uuid = null;

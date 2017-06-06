@@ -1,11 +1,9 @@
 package com.cairone.odataexample.services;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,42 +15,24 @@ import com.cairone.odataexample.entities.ProvinciaPKEntity;
 import com.cairone.odataexample.repositories.LocalidadRepository;
 import com.cairone.odataexample.repositories.PaisRepository;
 import com.cairone.odataexample.repositories.ProvinciaRepository;
-import com.mysema.query.types.expr.BooleanExpression;
 
 @Service
 public class LocalidadService {
+
+	public static final String CACHE_NAME = "LOCALIDADES";
 
 	@Autowired private PaisRepository paisRepository = null;
 	@Autowired private ProvinciaRepository provinciaRepository = null;
 	@Autowired private LocalidadRepository localidadRepository = null;
 
-	@Transactional(readOnly=true)
+	@Transactional(readOnly=true) @Cacheable(value=CACHE_NAME, key="#paisID + '-' + #provinciaID + '-' + #localidadID")
 	public LocalidadEntity buscarPorID(Integer paisID, Integer provinciaID, Integer localidadID) {
 		
 		LocalidadEntity localidadEntity = localidadRepository.findOne(new LocalidadPKEntity(paisID, provinciaID, localidadID));
 		return localidadEntity;
 	}
 
-	@Transactional(readOnly=true)
-	public List<LocalidadEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList) {
-		
-		Iterable<LocalidadEntity> localidadEntities = orderByList == null || orderByList.size() == 0 ?
-				localidadRepository.findAll(expression) : localidadRepository.findAll(expression, new Sort(orderByList));
-				
-		return (List<LocalidadEntity>) localidadEntities;
-	}
-
-	@Transactional(readOnly=true)
-	public Page<LocalidadEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList, int limit) {
-		
-		Page<LocalidadEntity> pageLocalidadEntity = orderByList == null || orderByList.size() == 0 ?
-				localidadRepository.findAll(expression, new PageRequest(0, limit)) :
-				localidadRepository.findAll(expression, new PageRequest(0, limit, new Sort(orderByList)));
-				
-		return pageLocalidadEntity;
-	}
-	
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#localidadFrmDto.paisId + '-' + #localidadFrmDto.provinciaId + '-' + #localidadFrmDto.localidadId")
 	public LocalidadEntity nuevo(LocalidadFrmDto localidadFrmDto) throws Exception {
 		
 		ProvinciaEntity provinciaEntity = provinciaRepository.findOne(new ProvinciaPKEntity(localidadFrmDto.getPaisId(), localidadFrmDto.getProvinciaId()));
@@ -74,7 +54,7 @@ public class LocalidadService {
 		return localidadEntity;
 	}
 
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#localidadFrmDto.paisId + '-' + #localidadFrmDto.provinciaId + '-' + #localidadFrmDto.localidadId")
 	public LocalidadEntity actualizar(LocalidadFrmDto provinciaFrmDto) throws Exception {
 		
 		if(provinciaFrmDto == null || provinciaFrmDto.getLocalidadId() == null || provinciaFrmDto.getProvinciaId() == null || provinciaFrmDto.getPaisId() == null) {
@@ -96,7 +76,7 @@ public class LocalidadService {
 		return localidadEntity;
 	}
 
-	@Transactional
+	@Transactional @CacheEvict(value=CACHE_NAME, key="#paisID + '-' + #provinciaID + '-' + #localidadID")
 	public void borrar(Integer paisID, Integer provinciaID, Integer localidadID) throws Exception {
 		
 		LocalidadEntity localidadEntity = localidadRepository.findOne(new LocalidadPKEntity(paisID, provinciaID, localidadID));

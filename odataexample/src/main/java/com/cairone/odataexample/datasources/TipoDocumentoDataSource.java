@@ -29,6 +29,7 @@ import com.cairone.odataexample.utils.ValidatorUtil;
 import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
+import com.hazelcast.core.HazelcastInstance;
 
 @Component
 public class TipoDocumentoDataSource implements DataSource {
@@ -37,6 +38,8 @@ public class TipoDocumentoDataSource implements DataSource {
 
 	@Autowired private TipoDocumentoService tipoDocumentoService = null;
 	@Autowired private TipoDocumentoFrmDtoValidator tipoDocumentoFrmDtoValidator = null;
+
+	@Autowired private HazelcastInstance hazelcastInstance = null;
 	
 	@PersistenceContext
     private EntityManager entityManager;
@@ -156,8 +159,13 @@ public class TipoDocumentoDataSource implements DataSource {
 			.build();
 	
 		List<TipoDocumentoEntity> tipoDocumentoEntities = JPQLQuery.execute(entityManager, query);
-		List<TipoDocumentoEdm> sectorEdms = tipoDocumentoEntities.stream().map(entity -> { return new TipoDocumentoEdm(entity); }).collect(Collectors.toList());
+		List<TipoDocumentoEdm> tipoDocumentoEdms = tipoDocumentoEntities.stream().map(entity -> { return new TipoDocumentoEdm(entity); }).collect(Collectors.toList());
+
+		Map<Integer, TipoDocumentoEntity> map = hazelcastInstance.getMap(TipoDocumentoService.CACHE_NAME);
+		tipoDocumentoEntities.forEach(tipoDocumentoEntity -> {
+			map.put(tipoDocumentoEntity.getId(), tipoDocumentoEntity);
+		});
 		
-		return sectorEdms;
+		return tipoDocumentoEdms;
 	}
 }

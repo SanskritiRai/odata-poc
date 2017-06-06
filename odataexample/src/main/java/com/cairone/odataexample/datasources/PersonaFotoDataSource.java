@@ -28,6 +28,7 @@ import com.cairone.olingo.ext.jpa.interfaces.MediaDataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 import com.google.common.base.CharMatcher;
+import com.hazelcast.core.HazelcastInstance;
 
 @Component
 public class PersonaFotoDataSource implements DataSource, MediaDataSource {
@@ -36,6 +37,8 @@ public class PersonaFotoDataSource implements DataSource, MediaDataSource {
 	
 	@Autowired private PersonaService personaService = null;
 
+	@Autowired private HazelcastInstance hazelcastInstance = null;
+	
 	@Autowired
 	private MessageSource messageSource = null;
 
@@ -105,7 +108,11 @@ public class PersonaFotoDataSource implements DataSource, MediaDataSource {
 				if(personaEntity == null) {
 					throw new ODataApplicationException(String.format("LA PERSONA CON ID (TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s) NO EXITE", tipoDocumentoId, numeroDocumento), HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
 				} else {
-					personaService.asignarFoto(personaEntity, personaFotoEntity);
+					try {
+						personaService.asignarFoto(personaEntity, personaFotoEntity);
+					} catch (Exception e) {
+						throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
+					}
 				}
 				
 				personaFotoEdm.setUuid(uuid);
@@ -181,6 +188,11 @@ public class PersonaFotoDataSource implements DataSource, MediaDataSource {
 			
 			return personaFotoEdm; 
 		}).collect(Collectors.toList());
+		
+		Map<String, PersonaFotoEntity> map = hazelcastInstance.getMap(PersonaService.CACHE_NAME_FOTO);
+		personaFotoEntities.forEach(personaFotoEntity -> {
+			map.put(personaFotoEntity.getUuid(), personaFotoEntity);
+		});
 		
 		return personaFotoEdms;
 	}

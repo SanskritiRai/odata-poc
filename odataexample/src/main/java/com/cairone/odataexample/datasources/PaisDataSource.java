@@ -29,6 +29,7 @@ import com.cairone.odataexample.utils.ValidatorUtil;
 import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
+import com.hazelcast.core.HazelcastInstance;
 
 @Component
 public class PaisDataSource implements DataSource {
@@ -37,6 +38,8 @@ public class PaisDataSource implements DataSource {
 	
 	@Autowired private PaisService paisService = null;
 	@Autowired private PaisFrmDtoValidator paisFrmDtoValidator = null;
+	
+	@Autowired private HazelcastInstance hazelcastInstance = null;
 	
 	@PersistenceContext
     private EntityManager entityManager;
@@ -156,6 +159,9 @@ public class PaisDataSource implements DataSource {
 		
 		List<PaisEntity> paisEntities = JPQLQuery.execute(entityManager, query);
 		List<PaisEdm> paisEdms = paisEntities.stream().map(entity -> { return new PaisEdm(entity); }).collect(Collectors.toList());
+		
+		Map<Integer, PaisEntity> map = hazelcastInstance.getMap(PaisService.CACHE_NAME);
+		map.putAll(paisEntities.stream().collect(Collectors.toMap(PaisEntity::getId, e -> e)));
 		
 		return paisEdms;
 	}

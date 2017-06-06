@@ -16,6 +16,7 @@ import com.cairone.odataexample.edm.resources.UsuarioEdm;
 import com.cairone.odataexample.entities.PermisoEntity;
 import com.cairone.odataexample.entities.UsuarioEntity;
 import com.cairone.odataexample.services.PermisoService;
+import com.cairone.odataexample.services.UsuarioService;
 import com.cairone.olingo.ext.jpa.annotations.EdmFunction;
 import com.cairone.olingo.ext.jpa.annotations.EdmReturnType;
 import com.cairone.olingo.ext.jpa.interfaces.Operation;
@@ -27,6 +28,7 @@ import com.google.common.base.CharMatcher;
 public class PermisoUsuariosAsignadosFunction implements Operation<List<UsuarioEdm>> {
 
 	@Autowired PermisoService permisoService = null;
+	@Autowired UsuarioService usuarioService = null;
 	
 	@Override
 	public List<UsuarioEdm> doOperation(boolean isBound, Map<String, UriParameter> keyPredicateMap) throws ODataException {
@@ -40,7 +42,7 @@ public class PermisoUsuariosAsignadosFunction implements Operation<List<UsuarioE
 			throw new ODataApplicationException(String.format("NO EXISTE UN PERMISO CON ID %s", permisoID), HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
 		}
 		
-		List<UsuarioEntity> usuarioEntities = permisoService.buscarUsuariosAsignados(permisoEntity);
+		List<UsuarioEntity> usuarioEntities = usuarioService.buscarUsuariosAsignados(permisoEntity);
 		List<UsuarioEdm> usuarioEdms = UsuarioEdm.crearLista(usuarioEntities);
 		
 		return usuarioEdms;

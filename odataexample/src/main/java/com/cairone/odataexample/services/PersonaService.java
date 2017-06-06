@@ -1,15 +1,19 @@
 package com.cairone.odataexample.services;
 
 import java.time.LocalDate;
-import java.util.List;
+
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.atomikos.icatch.jta.UserTransactionManager;
 import com.cairone.odataexample.dtos.PersonaFrmDto;
 import com.cairone.odataexample.entities.LocalidadEntity;
 import com.cairone.odataexample.entities.LocalidadPKEntity;
@@ -27,67 +31,35 @@ import com.cairone.odataexample.repositories.PersonaFotoRepository;
 import com.cairone.odataexample.repositories.PersonaRepository;
 import com.cairone.odataexample.repositories.PersonaSectorRepository;
 import com.cairone.odataexample.repositories.TipoDocumentoRepository;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.TransactionalMap;
+import com.hazelcast.transaction.HazelcastXAResource;
+import com.hazelcast.transaction.TransactionContext;
 import com.mysema.query.types.expr.BooleanExpression;
 
 @Service
 public class PersonaService {
+
+	public static final String CACHE_NAME_PERSONA = "PERSONAS";
+	public static final String CACHE_NAME_FOTO = "PERSONAS-FOTOS";
 
 	@Autowired private PersonaRepository personaRepository = null;
 	@Autowired private PersonaSectorRepository personaSectorRepository = null;
 	@Autowired private PersonaFotoRepository personaFotoRepository = null;
 	@Autowired private LocalidadRepository localidadRepository = null;
 	@Autowired private TipoDocumentoRepository tipoDocumentoRepository = null;
-
-	@Transactional(readOnly=true)
+	
+	@Autowired private HazelcastInstance hazelcastInstance = null;
+	@Autowired private UserTransactionManager tm = null;
+	
+	@Transactional(readOnly=true) @Cacheable(cacheNames=CACHE_NAME_PERSONA, key="#tipoDocumentoId + '-' + #numeroDocumento")
 	public PersonaEntity buscarPorId(Integer tipoDocumentoId, String numeroDocumento) {
 		
 		PersonaEntity personaEntity = personaRepository.findOne(new PersonaPKEntity(tipoDocumentoId, numeroDocumento));
 		return personaEntity;
 	}
-	
-	@Transactional(readOnly=true)
-	public PersonaEntity buscarPorFotoUUID(String uuid) {
 		
-		QPersonaEntity qPersona = QPersonaEntity.personaEntity;
-		BooleanExpression exp = qPersona.fotoUUID.eq(uuid);
-		
-		PersonaEntity personaEntity = personaRepository.findOne(exp);
-		
-		return personaEntity;
-	}
-	
-	@Transactional(readOnly=true)
-	public List<PersonaEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList) {
-		
-		Iterable<PersonaEntity> personaEntities = orderByList == null || orderByList.size() == 0 ?
-				personaRepository.findAll(expression) : personaRepository.findAll(expression, new Sort(orderByList));
-		
-		return (List<PersonaEntity>) personaEntities;
-	}
-
-	@Transactional(readOnly=true)
-	public Page<PersonaEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList, int limit) {
-		
-		Page<PersonaEntity> pagePersonaEntity = orderByList == null || orderByList.size() == 0 ?
-				personaRepository.findAll(expression, new PageRequest(0, limit)) :
-				personaRepository.findAll(expression, new PageRequest(0, limit, new Sort(orderByList)));
-				
-		return pagePersonaEntity;
-	}
-	
-	@Transactional(readOnly=true)
-	public PersonaFotoEntity buscarFoto(String uuid) {
-		
-		PersonaFotoEntity personaFotoEntity = personaFotoRepository.findOne(uuid);
-		return personaFotoEntity;
-	}
-
-	@Transactional(readOnly=true)
-	public PersonaFotoEntity buscarFoto(PersonaEntity personaEntity) {
-		return buscarFoto(personaEntity.getFotoUUID());
-	}
-
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME_PERSONA, key="#personaFrmDto.tipoDocumentoId + '-' + #personaFrmDto.numeroDocumento")
 	public PersonaEntity nuevo(PersonaFrmDto personaFrmDto) throws Exception {
 
 		LocalidadEntity localidadEntity = localidadRepository.findOne(new LocalidadPKEntity(personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getPaisId()));
@@ -116,7 +88,7 @@ public class PersonaService {
 		return personaEntity;
 	}
 
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME_PERSONA, key="#tipoDocumentoId + '-' + #numeroDocumento")
 	public PersonaEntity actualizar(PersonaFrmDto personaFrmDto) throws Exception {
 
 		if(personaFrmDto == null || personaFrmDto.getTipoDocumentoId() == null || personaFrmDto.getNumeroDocumento() == null) {
@@ -146,7 +118,7 @@ public class PersonaService {
 		return personaEntity;
 	}
 
-	@Transactional
+	@Transactional @CacheEvict(cacheNames=CACHE_NAME_PERSONA, key="#tipoDocumentoId + '-' + #numeroDocumento")
 	public void borrar(Integer tipoDocumentoID, String numeroDocumento) throws Exception {
 		
 		PersonaEntity personaEntity = personaRepository.findOne(new PersonaPKEntity(tipoDocumentoID, numeroDocumento));
@@ -158,7 +130,9 @@ public class PersonaService {
 		
 		personaRepository.delete(personaEntity);
 	}
-
+	
+	// ***** SECTORES
+	
 	@Transactional(readOnly=true)
 	public Iterable<PersonaSectorEntity> buscarSectores(PersonaEntity personaEntity) {
 		
@@ -204,8 +178,33 @@ public class PersonaService {
 			personaSectorRepository.delete(personaSectorEntity);
 		}
 	}
+
+	// ***** FOTOS
+
+	@Transactional(readOnly=true) @CachePut(cacheNames=CACHE_NAME_PERSONA, key="#result.tipoDocumento.id + '-' + #result.numeroDocumento")
+	public PersonaEntity buscarPorFotoUUID(String uuid) {
+		
+		QPersonaEntity qPersona = QPersonaEntity.personaEntity;
+		BooleanExpression exp = qPersona.fotoUUID.eq(uuid);
+		
+		PersonaEntity personaEntity = personaRepository.findOne(exp);
+		
+		return personaEntity;
+	}
 	
-	@Transactional
+	@Transactional(readOnly=true) @Cacheable(value=CACHE_NAME_FOTO, key="#uuid")
+	public PersonaFotoEntity buscarFoto(String uuid) {
+		
+		PersonaFotoEntity personaFotoEntity = personaFotoRepository.findOne(uuid);
+		return personaFotoEntity;
+	}
+
+	@Transactional(readOnly=true) @Cacheable(value=CACHE_NAME_FOTO, key="#uuid")
+	public PersonaFotoEntity buscarFoto(PersonaEntity personaEntity) {
+		return buscarFoto(personaEntity.getFotoUUID());
+	}
+
+	@Transactional @CachePut(cacheNames=CACHE_NAME_FOTO, key="#result.uuid")
 	public PersonaFotoEntity nuevaFoto(byte[] foto) {
 		
 		PersonaFotoEntity personaFotoEntity = new PersonaFotoEntity(foto);
@@ -215,12 +214,34 @@ public class PersonaService {
 	}
 	
 	@Transactional
-	public void asignarFoto(PersonaEntity personaEntity, PersonaFotoEntity personaFotoEntity) {
+	public void asignarFoto(PersonaEntity personaEntity, PersonaFotoEntity personaFotoEntity) throws Exception {
+		
+		// **** ACTUALIZACION DE LA FOTO EN LA BASE DE DATOS
+		
 		personaEntity.setFotoUUID(personaFotoEntity.getUuid());
 		personaRepository.save(personaEntity);
+		
+		// **** ACTUALIZACION DE LA FOTO EN EL CACHE
+
+		HazelcastXAResource xaResource = hazelcastInstance.getXAResource();
+		
+		try
+		{
+			Transaction transaction = tm.getTransaction();
+			transaction.enlistResource(xaResource);
+			
+		} catch(SystemException | IllegalStateException | RollbackException e) {
+			throw new Exception(e.getMessage(), e);
+		}
+		
+		TransactionContext context = xaResource.getTransactionContext();
+		TransactionalMap<String, PersonaEntity> map = context.getMap(CACHE_NAME_PERSONA);
+
+		String key = String.format("%s-%s", personaEntity.getTipoDocumento().getId(), personaEntity.getNumeroDocumento());
+		map.put(key, personaEntity);
 	}
 	
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME_FOTO, key="#personaEntity.fotoUUID")
 	public PersonaFotoEntity actualizarFoto(PersonaEntity personaEntity, byte[] foto) {
 
 		String uuid = personaEntity.getFotoUUID();
@@ -242,7 +263,7 @@ public class PersonaService {
 		return fotoEntity;
 	}
 
-	@Transactional
+	@Transactional @CacheEvict(cacheNames=CACHE_NAME_FOTO, key="#personaEntity.fotoUUID")
 	public void quitarFoto(PersonaEntity personaEntity) {
 		
 		if(personaEntity.getFotoUUID() != null) {
@@ -254,7 +275,7 @@ public class PersonaService {
 		}
 	}
 	
-	@Transactional
+	@Transactional @CacheEvict(cacheNames=CACHE_NAME_FOTO, key="#uuid")
 	public void quitarFoto(String uuid) {
 		
 		QPersonaEntity qPersona = QPersonaEntity.personaEntity;

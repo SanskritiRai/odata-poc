@@ -30,6 +30,7 @@ import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 import com.google.common.base.CharMatcher;
+import com.hazelcast.core.HazelcastInstance;
 
 @Component
 public class UsuarioDataSource implements DataSource {
@@ -39,6 +40,8 @@ public class UsuarioDataSource implements DataSource {
 	@Autowired private UsuarioService usuarioService = null;
 	@Autowired private UsuarioFrmDtoValidator usuarioFrmDtoValidator = null;
 
+	@Autowired private HazelcastInstance hazelcastInstance = null;
+	
 	@PersistenceContext
     private EntityManager entityManager;
 	
@@ -186,6 +189,12 @@ public class UsuarioDataSource implements DataSource {
 		
 		List<UsuarioEntity> usuarioEntities = JPQLQuery.execute(entityManager, query);
 		List<UsuarioEdm> usuarioEdms = usuarioEntities.stream().map(entity -> { return new UsuarioEdm(entity); }).collect(Collectors.toList());
+
+		Map<String, UsuarioEntity> map = hazelcastInstance.getMap(UsuarioService.CACHE_NAME);
+		usuarioEntities.forEach(usuarioEntity -> {
+			String key = String.format("%s-%s", usuarioEntity.getPersona().getTipoDocumento().getId(), usuarioEntity.getPersona().getNumeroDocumento());
+			map.put(key, usuarioEntity);
+		});
 		
 		return usuarioEdms;
 	}

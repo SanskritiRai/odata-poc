@@ -1,51 +1,31 @@
 package com.cairone.odataexample.services;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cairone.odataexample.dtos.TipoDocumentoFrmDto;
 import com.cairone.odataexample.entities.TipoDocumentoEntity;
 import com.cairone.odataexample.repositories.TipoDocumentoRepository;
-import com.mysema.query.types.expr.BooleanExpression;
 
 @Service
 public class TipoDocumentoService {
 
+	public static final String CACHE_NAME = "TIPOS_DOCUMENTOS";
+
 	@Autowired private TipoDocumentoRepository tipoDocumentoRepository = null;
 	
-	@Transactional(readOnly=true)
+	@Transactional(readOnly=true) @Cacheable(CACHE_NAME)
 	public TipoDocumentoEntity buscarPorID(Integer tipoDocumentoID) {
 		
 		TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoRepository.findOne(tipoDocumentoID);
 		return tipoDocumentoEntity;
 	}
 
-	@Transactional(readOnly=true)
-	public List<TipoDocumentoEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList) {
-		
-		Iterable<TipoDocumentoEntity> tipoDocumentoEntities = orderByList == null || orderByList.size() == 0 ?
-				tipoDocumentoRepository.findAll(expression) : tipoDocumentoRepository.findAll(expression, new Sort(orderByList));
-				
-		return (List<TipoDocumentoEntity>) tipoDocumentoEntities;
-	}
-
-	@Transactional(readOnly=true)
-	public Page<TipoDocumentoEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList, int limit) {
-		
-		Page<TipoDocumentoEntity> pageTipoDocumentoEntity = orderByList == null || orderByList.size() == 0 ?
-				tipoDocumentoRepository.findAll(expression, new PageRequest(0, limit)) :
-				tipoDocumentoRepository.findAll(expression, new PageRequest(0, limit, new Sort(orderByList)));
-				
-		return pageTipoDocumentoEntity;
-	}
-	
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#tipoDocumentoFrmDto.id")
 	public TipoDocumentoEntity nuevo(TipoDocumentoFrmDto tipoDocumentoFrmDto) {
 		
 		TipoDocumentoEntity tipoDocumentoEntity = new TipoDocumentoEntity();
@@ -59,7 +39,7 @@ public class TipoDocumentoService {
 		return tipoDocumentoEntity;
 	}
 
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#tipoDocumentoFrmDto.id")
 	public TipoDocumentoEntity actualizar(TipoDocumentoFrmDto tipoDocumentoFrmDto) throws Exception {
 		
 		if(tipoDocumentoFrmDto == null || tipoDocumentoFrmDto.getId() == null) {
@@ -80,7 +60,7 @@ public class TipoDocumentoService {
 		return tipoDocumentoEntity;
 	}
 
-	@Transactional
+	@Transactional @CacheEvict(CACHE_NAME)
 	public void borrar(Integer tipoDocumentoID) throws Exception {
 		
 		TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoRepository.findOne(tipoDocumentoID);

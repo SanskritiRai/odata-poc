@@ -32,6 +32,7 @@ import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 import com.google.common.base.CharMatcher;
+import com.hazelcast.core.HazelcastInstance;
 
 @Component
 public class PersonaDataSource implements DataSource {
@@ -42,6 +43,8 @@ public class PersonaDataSource implements DataSource {
 	@Autowired private LocalidadService localidadService = null;
 	@Autowired private PersonaFrmDtoValidator personaFrmDtoValidator = null;
 
+	@Autowired private HazelcastInstance hazelcastInstance = null;
+	
 	@Autowired
 	private MessageSource messageSource = null;
 
@@ -203,6 +206,12 @@ public class PersonaDataSource implements DataSource {
 	
 		List<PersonaEntity> personaEntities = JPQLQuery.execute(entityManager, query);
 		List<PersonaEdm> personaEdms = personaEntities.stream().map(entity -> { return new PersonaEdm(entity); }).collect(Collectors.toList());
+		
+		Map<String, PersonaEntity> map = hazelcastInstance.getMap(PersonaService.CACHE_NAME_PERSONA);
+		personaEntities.forEach(personaEntity -> {
+			String key = String.format("%s-%s", personaEntity.getTipoDocumento().getId(), personaEntity.getNumeroDocumento());
+			map.put(key, personaEntity);
+		});
 		
 		return personaEdms;
 	}

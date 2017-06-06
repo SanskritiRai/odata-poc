@@ -23,12 +23,14 @@ import com.cairone.odataexample.dtos.SectorFrmDto;
 import com.cairone.odataexample.dtos.validators.SectorFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.SectorEdm;
 import com.cairone.odataexample.entities.SectorEntity;
+import com.cairone.odataexample.services.ProvinciaService;
 import com.cairone.odataexample.services.SectorService;
 import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
 import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
+import com.hazelcast.core.HazelcastInstance;
 
 @Component
 public class SectorDataSource implements DataSource {
@@ -37,6 +39,8 @@ public class SectorDataSource implements DataSource {
 
 	@Autowired private SectorService sectorService = null;
 	@Autowired private SectorFrmDtoValidator sectorFrmDtoValidator = null;
+
+	@Autowired private HazelcastInstance hazelcastInstance = null;
 	
 	@PersistenceContext
     private EntityManager entityManager;
@@ -150,6 +154,11 @@ public class SectorDataSource implements DataSource {
 	
 		List<SectorEntity> sectorEntities = JPQLQuery.execute(entityManager, query);
 		List<SectorEdm> sectorEdms = sectorEntities.stream().map(entity -> { return new SectorEdm(entity); }).collect(Collectors.toList());
+
+		Map<Integer, SectorEntity> map = hazelcastInstance.getMap(ProvinciaService.CACHE_NAME);
+		sectorEntities.forEach(sectorEntity -> {
+			map.put(sectorEntity.getId(), sectorEntity);
+		});
 		
 		return sectorEdms;
 	}

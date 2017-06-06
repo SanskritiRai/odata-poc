@@ -1,12 +1,12 @@
 package com.cairone.odataexample.services;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +14,7 @@ import com.cairone.odataexample.dtos.UsuarioFrmDto;
 import com.cairone.odataexample.entities.PermisoEntity;
 import com.cairone.odataexample.entities.PersonaEntity;
 import com.cairone.odataexample.entities.PersonaPKEntity;
+import com.cairone.odataexample.entities.QUsuarioPermisoEntity;
 import com.cairone.odataexample.entities.UsuarioEntity;
 import com.cairone.odataexample.entities.UsuarioPKEntity;
 import com.cairone.odataexample.entities.UsuarioPermisoEntity;
@@ -26,18 +27,20 @@ import com.mysema.query.types.expr.BooleanExpression;
 @Service
 public class UsuarioService {
 
+	public static final String CACHE_NAME = "USUARIOS";
+
 	@Autowired private UsuarioRepository usuarioRepository = null;
 	@Autowired private UsuarioPermisoRepository usuarioPermisoRepository = null;
 	@Autowired private PersonaRepository personaRepository = null;
 
-	@Transactional(readOnly=true)
+	@Transactional(readOnly=true) @Cacheable(cacheNames=CACHE_NAME, key="#tipoDocumentoId + '-' + #numeroDocumento")
 	public UsuarioEntity buscarPorId(Integer tipoDocumentoId, String numeroDocumento) {
 		
 		UsuarioEntity usuarioEntity = usuarioRepository.findOne(new UsuarioPKEntity(tipoDocumentoId, numeroDocumento));
 		return usuarioEntity;
 	}
 
-	@Transactional(readOnly=true)
+	@Transactional(readOnly=true) @Cacheable(cacheNames=CACHE_NAME, key="#personaEntity.tipoDocumento.id + '-' + #personaEntity.numeroDocumento")
 	public UsuarioEntity buscarPorPersona(PersonaEntity personaEntity) {
 		
 		UsuarioEntity usuarioEntity = usuarioRepository.findOne(
@@ -47,27 +50,25 @@ public class UsuarioService {
 		
 		return usuarioEntity;
 	}
+
+	@Transactional(readOnly=true)
+	public List<UsuarioEntity> buscarUsuariosAsignados(PermisoEntity permisoEntity) {
+		
+		List<UsuarioEntity> usuarioEntities = new ArrayList<UsuarioEntity>();
+		
+		QUsuarioPermisoEntity q = QUsuarioPermisoEntity.usuarioPermisoEntity;
+		BooleanExpression exp = q.permiso.eq(permisoEntity);
+		
+		Iterable<UsuarioPermisoEntity> iterable = usuarioPermisoRepository.findAll(exp);
+		
+		for(UsuarioPermisoEntity usuarioPermisoEntity : iterable) {
+			usuarioEntities.add(usuarioPermisoEntity.getUsuario());
+		}
+		
+		return usuarioEntities;
+	}
 	
-	@Transactional(readOnly=true)
-	public List<UsuarioEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList) {
-		
-		Iterable<UsuarioEntity> usuarioEntities = orderByList == null || orderByList.size() == 0 ?
-				usuarioRepository.findAll(expression) : usuarioRepository.findAll(expression, new Sort(orderByList));
-				
-		return (List<UsuarioEntity>) usuarioEntities;
-	}
-
-	@Transactional(readOnly=true)
-	public Page<UsuarioEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList, int limit) {
-		
-		Page<UsuarioEntity> pageUsuarioEntity = orderByList == null || orderByList.size() == 0 ?
-				usuarioRepository.findAll(expression, new PageRequest(0, limit)) :
-				usuarioRepository.findAll(expression, new PageRequest(0, limit, new Sort(orderByList)));
-				
-		return pageUsuarioEntity;
-	}
-
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#usuarioFrmDto.tipoDocumentoId + '-' + #usuarioFrmDto.numeroDocumento")
 	public UsuarioEntity nuevo(UsuarioFrmDto usuarioFrmDto) throws Exception {
 		
 		PersonaEntity personaEntity = personaRepository.findOne(new PersonaPKEntity(usuarioFrmDto.getTipoDocumentoId(), usuarioFrmDto.getNumeroDocumento()));
@@ -92,7 +93,7 @@ public class UsuarioService {
 	}
 
 
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#usuarioFrmDto.tipoDocumentoId + '-' + #usuarioFrmDto.numeroDocumento")
 	public UsuarioEntity actualizar(UsuarioFrmDto usuarioFrmDto) throws Exception {
 
 		if(usuarioFrmDto == null || usuarioFrmDto.getTipoDocumentoId() == null || usuarioFrmDto.getNumeroDocumento() == null) {
@@ -116,7 +117,7 @@ public class UsuarioService {
 		return usuarioEntity;
 	}
 
-	@Transactional
+	@Transactional @Cacheable(cacheNames=CACHE_NAME, key="#tipoDocumentoID + '-' + #numeroDocumento")
 	public void borrar(Integer tipoDocumentoID, String numeroDocumento) throws Exception {
 		
 		UsuarioEntity usuarioEntity = usuarioRepository.findOne(new UsuarioPKEntity(tipoDocumentoID, numeroDocumento));

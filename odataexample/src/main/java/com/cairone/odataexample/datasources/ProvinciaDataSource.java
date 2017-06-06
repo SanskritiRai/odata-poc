@@ -29,6 +29,7 @@ import com.cairone.odataexample.utils.ValidatorUtil;
 import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
+import com.hazelcast.core.HazelcastInstance;
 
 @Component
 public class ProvinciaDataSource implements DataSource {
@@ -38,6 +39,8 @@ public class ProvinciaDataSource implements DataSource {
 	@Autowired private ProvinciaService provinciaService = null;
 	@Autowired private ProvinciaFrmDtoValidator provinciaFrmDtoValidator = null;
 
+	@Autowired private HazelcastInstance hazelcastInstance = null;
+	
 	@Autowired
 	private MessageSource messageSource = null;
 	
@@ -155,6 +158,12 @@ public class ProvinciaDataSource implements DataSource {
 	
 		List<ProvinciaEntity> provinciaEntities = JPQLQuery.execute(entityManager, query);
 		List<ProvinciaEdm> provinciaEdms = provinciaEntities.stream().map(entity -> { return new ProvinciaEdm(entity); }).collect(Collectors.toList());
+		
+		Map<String, ProvinciaEntity> map = hazelcastInstance.getMap(ProvinciaService.CACHE_NAME);
+		provinciaEntities.forEach(provinciaEntity -> {
+			String key = String.format("%s-%s", provinciaEntity.getPais().getId(), provinciaEntity.getId());
+			map.put(key, provinciaEntity);
+		});
 		
 		return provinciaEdms;
 	}

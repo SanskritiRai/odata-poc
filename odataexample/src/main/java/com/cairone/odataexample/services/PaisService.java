@@ -1,29 +1,23 @@
 package com.cairone.odataexample.services;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cairone.odataexample.dtos.PaisFrmDto;
 import com.cairone.odataexample.entities.PaisEntity;
 import com.cairone.odataexample.repositories.PaisRepository;
-import com.mysema.query.types.expr.BooleanExpression;
 
 @Service
 public class PaisService {
 	
 	private static Logger LOG = LoggerFactory.getLogger(PaisService.class);
-	private static final String CACHE_NAME = "paises";
+	public static final String CACHE_NAME = "PAISES";
 
 	@Autowired private PaisRepository paisRepository = null;
 
@@ -34,30 +28,6 @@ public class PaisService {
 		
 		PaisEntity paisEntity = paisRepository.findOne(paisID);
 		return paisEntity;
-	}
-	
-	@Transactional(readOnly=true)
-	public List<PaisEntity> ejecutarConsulta() {
-		return ejecutarConsulta(null, null);
-	}
-
-	@Transactional(readOnly=true)
-	public List<PaisEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList) {
-
-		Iterable<PaisEntity> paisEntities = orderByList == null || orderByList.size() == 0 ?
-				paisRepository.findAll(expression) : paisRepository.findAll(expression, new Sort(orderByList));
-				
-		return (List<PaisEntity>) paisEntities;
-	}
-
-	@Transactional(readOnly=true)
-	public Page<PaisEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList, int limit) {
-		
-		Page<PaisEntity> pagePaisEntity = orderByList == null || orderByList.size() == 0 ?
-				paisRepository.findAll(expression, new PageRequest(0, limit)) :
-					paisRepository.findAll(expression, new PageRequest(0, limit, new Sort(orderByList)));
-				
-		return pagePaisEntity;
 	}
 	
 	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#paisFrmDto.id")

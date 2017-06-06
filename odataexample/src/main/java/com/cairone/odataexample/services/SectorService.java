@@ -6,9 +6,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,10 +25,12 @@ import com.mysema.query.types.expr.BooleanExpression;
 @Service
 public class SectorService {
 
+	private static final String CACHE_NAME = "SECTOR";
+
 	@Autowired private SectorRepository sectorRepository = null;
 	@Autowired private PersonaSectorRepository personaSectorRepository = null;
 
-	@Transactional(readOnly=true)
+	@Transactional(readOnly=true) @Cacheable(CACHE_NAME)
 	public SectorEntity buscarPorID(Integer sectorID) {
 		
 		SectorEntity sectorEntity = sectorRepository.findOne(sectorID);
@@ -49,26 +51,7 @@ public class SectorService {
 		return sectorEntities;
 	}
 
-	@Transactional(readOnly=true)
-	public List<SectorEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList) {
-		
-		Iterable<SectorEntity> sectorEntities = orderByList == null || orderByList.size() == 0 ?
-				sectorRepository.findAll(expression) : sectorRepository.findAll(expression, new Sort(orderByList));
-		
-		return (List<SectorEntity>) sectorEntities;
-	}
-
-	@Transactional(readOnly=true)
-	public Page<SectorEntity> ejecutarConsulta(BooleanExpression expression, List<Sort.Order> orderByList, int limit) {
-		
-		Page<SectorEntity> pageSectorEntity = orderByList == null || orderByList.size() == 0 ?
-				sectorRepository.findAll(expression, new PageRequest(0, limit)) :
-				sectorRepository.findAll(expression, new PageRequest(0, limit, new Sort(orderByList)));
-				
-		return pageSectorEntity;
-	}
-	
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#sectorFrmDto.id")
 	public SectorEntity nuevo(SectorFrmDto sectorFrmDto) {
 		
 		SectorEntity sectorEntity = new SectorEntity();
@@ -81,7 +64,7 @@ public class SectorService {
 		return sectorEntity;
 	}
 
-	@Transactional
+	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#sectorFrmDto.id")
 	public SectorEntity actualizar(SectorFrmDto sectorFrmDto) throws Exception {
 		
 		if(sectorFrmDto == null || sectorFrmDto.getId() == null) {
@@ -101,7 +84,7 @@ public class SectorService {
 		return sectorEntity;
 	}
 
-	@Transactional
+	@Transactional @CacheEvict(CACHE_NAME)
 	public void borrar(Integer sectorID) throws Exception {
 		
 		SectorEntity sectorEntity = sectorRepository.findOne(sectorID);

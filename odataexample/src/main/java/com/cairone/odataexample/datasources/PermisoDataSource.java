@@ -26,6 +26,7 @@ import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 import com.google.common.base.CharMatcher;
+import com.hazelcast.core.HazelcastInstance;
 
 @Component
 public class PermisoDataSource implements DataSource {
@@ -34,6 +35,8 @@ public class PermisoDataSource implements DataSource {
 
 	@Autowired private PermisoService permisoService = null;
 
+	@Autowired private HazelcastInstance hazelcastInstance = null;
+	
 	@PersistenceContext
     private EntityManager entityManager;
 	
@@ -84,6 +87,9 @@ public class PermisoDataSource implements DataSource {
 
 		List<PermisoEntity> permisoEntities = JPQLQuery.execute(entityManager, query);
 		List<PermisoEdm> permisoEdms = permisoEntities.stream().map(entity -> { return new PermisoEdm(entity); }).collect(Collectors.toList());
+
+		Map<String, PermisoEntity> map = hazelcastInstance.getMap(PermisoService.CACHE_NAME);
+		map.putAll(permisoEntities.stream().collect(Collectors.toMap(PermisoEntity::getNombre, e -> e)));
 		
 		return permisoEdms;
 	}
