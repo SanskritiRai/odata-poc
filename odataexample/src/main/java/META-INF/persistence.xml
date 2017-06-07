@@ -3,6 +3,7 @@
 	<persistence-unit name="odataexample">
 		<class>com.cairone.odataexample.converters.GeneroConverter</class>
 		<class>com.cairone.odataexample.converters.LocalDateConverter</class>
+		<class>com.cairone.odataexample.entities.HzPrestamoPendienteEntity</class>
 		<class>com.cairone.odataexample.entities.LocalidadEntity</class>
 		<class>com.cairone.odataexample.entities.LocalidadPKEntity</class>
 		<class>com.cairone.odataexample.entities.PaisEntity</class>
@@ -12,6 +13,9 @@
 		<class>com.cairone.odataexample.entities.PersonaPKEntity</class>
 		<class>com.cairone.odataexample.entities.PersonaSectorEntity</class>
 		<class>com.cairone.odataexample.entities.PersonaSectorPKEntity</class>
+		<class>com.cairone.odataexample.entities.PrestamoCuotaEntity</class>
+		<class>com.cairone.odataexample.entities.PrestamoCuotaPKEntity</class>
+		<class>com.cairone.odataexample.entities.PrestamoEntity</class>
 		<class>com.cairone.odataexample.entities.ProvinciaEntity</class>
 		<class>com.cairone.odataexample.entities.ProvinciaPKEntity</class>
 		<class>com.cairone.odataexample.entities.SectorEntity</class>

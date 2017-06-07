@@ -1,5 +1,7 @@
 package com.cairone.odataexample.edm.resources;
 
+import java.io.Serializable;
+
 import com.cairone.odataexample.OdataExample;
 import com.cairone.odataexample.entities.LocalidadEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
@@ -12,7 +14,9 @@ import com.cairone.olingo.ext.jpa.annotations.ODataJPAProperty;
 @EdmEntity(name = "Localidad", key = { "paisId", "provinciaId", "localidadId" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
 @EdmEntitySet("Localidades")
 @ODataJPAEntity("LocalidadEntity")
-public class LocalidadEdm {
+public class LocalidadEdm implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@EdmProperty(name="paisId", nullable = false) @ODataJPAProperty("provincia.pais.id")
 	private Integer paisId = null;

@@ -13,15 +13,15 @@ import org.springframework.stereotype.Component;
 
 import com.cairone.odataexample.dtos.PrestamoDesarrolloParamFrmDto;
 import com.cairone.odataexample.edm.resources.PrestamoCuotaEdm;
+import com.cairone.odataexample.services.PrestamoService;
 
 @Component
 public class DesarrolloPrestamoProcess {
 
 	private final static Logger LOG = LoggerFactory.getLogger(DesarrolloPrestamoProcess.class);
 	private final static int ESCALA = 6;
-	public static final String CACHE_NAME = "PRESTAMOS-DESARROLLO";
 	
-	@Cacheable(CACHE_NAME)
+	@Cacheable(PrestamoService.CACHE_NAME_DESARROLLO)
 	public Iterable<PrestamoCuotaEdm> desarrollar(PrestamoDesarrolloParamFrmDto prestamoDesarrolloParamFrmDto) {
 		
 		LOG.info("DESARROLLANDO CUOTAS PARA LOS SIGUIENTES PARAMETROS... {}", prestamoDesarrolloParamFrmDto);

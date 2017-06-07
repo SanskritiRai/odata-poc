@@ -143,4 +143,9 @@ public class PrestamoCuotaEdm implements Comparable<PrestamoCuotaEdm>, Serializa
 		monto = monto.setScale(newScale, RoundingMode.HALF_UP);
 		saldoCapital = saldoCapital.setScale(newScale, RoundingMode.HALF_UP);
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("CUOTA: %s - CAPITAL: %s - INTERES: %s", numero, capital, interes);
+	}
 }

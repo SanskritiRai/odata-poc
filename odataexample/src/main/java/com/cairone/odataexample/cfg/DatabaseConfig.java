@@ -2,6 +2,8 @@ package com.cairone.odataexample.cfg;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jta.atomikos.AtomikosDataSourceBean;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +16,8 @@ import com.microsoft.sqlserver.jdbc.SQLServerXADataSource;
 @EnableTransactionManagement
 public class DatabaseConfig {
 	
+	private final static Logger LOG = LoggerFactory.getLogger(DatabaseConfig.class);
+	
 	@Value("${database.serverName}") private String serverName = null;
 	@Value("${database.databaseName}") private String databaseName = null;
 	@Value("${database.user}") private String user = null;
@@ -22,6 +26,8 @@ public class DatabaseConfig {
 	@Bean
 	public DataSource databaseDataSource() {
 
+		LOG.info("Configurando DATASOURCE ...");
+		
 		SQLServerXADataSource xaDataSource = new SQLServerXADataSource();
 		
 		xaDataSource.setServerName(serverName);

@@ -1,5 +1,6 @@
 package com.cairone.odataexample.edm.resources;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,9 @@ import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 
 @EdmEntity(name = "PersonaSector", key = { "id" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
 @EdmEntitySet("PersonasSectores")
-public class PersonaSectorEdm {
+public class PersonaSectorEdm implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@EdmProperty(name="id", nullable = false)
 	private Integer id = null;
