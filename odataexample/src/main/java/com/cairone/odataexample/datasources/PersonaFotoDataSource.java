@@ -8,13 +8,13 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
+import org.apache.olingo.server.api.uri.queryoption.SelectOption;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
@@ -23,6 +23,7 @@ import com.cairone.odataexample.edm.resources.PersonaFotoEdm;
 import com.cairone.odataexample.entities.PersonaEntity;
 import com.cairone.odataexample.entities.PersonaFotoEntity;
 import com.cairone.odataexample.services.PersonaService;
+import com.cairone.odataexample.utils.SQLExceptionParser;
 import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.interfaces.MediaDataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
@@ -84,12 +85,12 @@ public class PersonaFotoDataSource implements DataSource, MediaDataSource {
 	}
 
 	@Override
-	public Object create(Object entity) throws ODataException {
+	public Object create(Object entity) throws ODataApplicationException {
 		throw new ODataApplicationException("Not implemented", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
 	}
 
 	@Override
-	public Object update(Map<String, UriParameter> keyPredicateMap, Object entity, List<String> propertiesInJSON, boolean isPut) throws ODataException {
+	public Object update(Map<String, UriParameter> keyPredicateMap, Object entity, List<String> propertiesInJSON, boolean isPut) throws ODataApplicationException {
 		
 		if(entity instanceof PersonaFotoEdm) {
 			
@@ -125,22 +126,22 @@ public class PersonaFotoDataSource implements DataSource, MediaDataSource {
 	}
 
 	@Override
-	public Object delete(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+	public Object delete(Map<String, UriParameter> keyPredicateMap) throws ODataApplicationException {
 		
 		String uuid = CharMatcher.is('\'').trimFrom( keyPredicateMap.get("uuid").getText() );
     	
     	try {
     		personaService.quitarFoto(uuid);
 		} catch (Exception e) {
-			throw new ODataApplicationException(
-    			String.format("LA FOTO DE PERSONA CON ID %s NO EXITE", uuid), HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
+			String message = SQLExceptionParser.parse(e);
+			throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
 		}
     	
     	return null;
 	}
 	
 	@Override
-	public Object readFromKey(Map<String, UriParameter> keyPredicateMap) throws ODataException {
+	public Object readFromKey(Map<String, UriParameter> keyPredicateMap, ExpandOption expandOption, SelectOption selectOption) throws ODataApplicationException {
 		
 		String uuid = CharMatcher.is('\'').trimFrom( keyPredicateMap.get("uuid").getText() );
     	PersonaFotoEntity personaFotoEntity = personaService.buscarFoto(uuid);
@@ -165,7 +166,7 @@ public class PersonaFotoDataSource implements DataSource, MediaDataSource {
 	}
 
 	@Override
-	public Iterable<?> readAll(ExpandOption expandOption, FilterOption filterOption, OrderByOption orderByOption) throws ODataException {
+	public Iterable<?> readAll(ExpandOption expandOption, FilterOption filterOption, OrderByOption orderByOption) throws ODataApplicationException {
 
 		JPQLQuery query = new JPQLQueryBuilder()
 			.setDistinct(false)
