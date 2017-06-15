@@ -18,6 +18,7 @@ import com.cairone.odataexample.entities.PersonaSectorEntity;
 import com.cairone.odataexample.entities.PersonaSectorPKEntity;
 import com.cairone.odataexample.entities.QPersonaSectorEntity;
 import com.cairone.odataexample.entities.SectorEntity;
+import com.cairone.odataexample.exceptions.ServiceException;
 import com.cairone.odataexample.repositories.PersonaSectorRepository;
 import com.cairone.odataexample.repositories.SectorRepository;
 import com.mysema.query.types.expr.BooleanExpression;
@@ -31,9 +32,16 @@ public class SectorService {
 	@Autowired private PersonaSectorRepository personaSectorRepository = null;
 
 	@Transactional(readOnly=true) @Cacheable(CACHE_NAME)
-	public SectorEntity buscarPorID(Integer sectorID) {
+	public SectorEntity buscarPorID(Integer sectorID) throws ServiceException {
+
+		if(sectorID == null) throw new ServiceException(ServiceException.MISSING_DATA, "EL ID DEL SECTOR NO PUEDE SER NULO");
 		
 		SectorEntity sectorEntity = sectorRepository.findOne(sectorID);
+		
+		if(sectorEntity == null) {
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE ENCUENTRA EL SECTOR CON ID %s", sectorID));
+		}
+		
 		return sectorEntity;
 	}
 	
@@ -65,16 +73,16 @@ public class SectorService {
 	}
 
 	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#sectorFrmDto.id")
-	public SectorEntity actualizar(SectorFrmDto sectorFrmDto) throws Exception {
+	public SectorEntity actualizar(SectorFrmDto sectorFrmDto) throws ServiceException {
 		
 		if(sectorFrmDto == null || sectorFrmDto.getId() == null) {
-			throw new Exception("NO SE PUEDE IDENTIFICAR EL SECTOR A ACTUALIZAR");
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, "NO SE PUEDE IDENTIFICAR EL SECTOR A ACTUALIZAR");
 		}
 		
 		SectorEntity sectorEntity = sectorRepository.findOne(sectorFrmDto.getId());
 		
 		if(sectorEntity == null) {
-			throw new Exception(String.format("NO SE PUEDE ENCONTRAR UN SECTOR CON ID %s", sectorFrmDto.getId()));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UN SECTOR CON ID %s", sectorFrmDto.getId()));
 		}
 		
 		sectorEntity.setNombre(sectorFrmDto.getNombre());
@@ -85,12 +93,12 @@ public class SectorService {
 	}
 
 	@Transactional @CacheEvict(CACHE_NAME)
-	public void borrar(Integer sectorID) throws Exception {
+	public void borrar(Integer sectorID) throws ServiceException {
 		
 		SectorEntity sectorEntity = sectorRepository.findOne(sectorID);
 		
 		if(sectorEntity == null) {
-			throw new Exception(String.format("NO SE PUEDE ENCONTRAR UN SECTOR CON ID %s", sectorID));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UN SECTOR CON ID %s", sectorID));
 		}
 		
 		sectorRepository.delete(sectorEntity);

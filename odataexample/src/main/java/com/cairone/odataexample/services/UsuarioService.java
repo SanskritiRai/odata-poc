@@ -19,6 +19,7 @@ import com.cairone.odataexample.entities.UsuarioEntity;
 import com.cairone.odataexample.entities.UsuarioPKEntity;
 import com.cairone.odataexample.entities.UsuarioPermisoEntity;
 import com.cairone.odataexample.entities.UsuarioPermisoPKEntity;
+import com.cairone.odataexample.exceptions.ServiceException;
 import com.cairone.odataexample.repositories.PersonaRepository;
 import com.cairone.odataexample.repositories.UsuarioPermisoRepository;
 import com.cairone.odataexample.repositories.UsuarioRepository;
@@ -34,9 +35,17 @@ public class UsuarioService {
 	@Autowired private PersonaRepository personaRepository = null;
 
 	@Transactional(readOnly=true) @Cacheable(cacheNames=CACHE_NAME, key="#tipoDocumentoId + '-' + #numeroDocumento")
-	public UsuarioEntity buscarPorId(Integer tipoDocumentoId, String numeroDocumento) {
+	public UsuarioEntity buscarPorId(Integer tipoDocumentoId, String numeroDocumento) throws ServiceException {
+
+		if(tipoDocumentoId == null) throw new ServiceException(ServiceException.MISSING_DATA, "EL ID DEL TIPO DE DOCUMENTO NO PUEDE SER NULO");
+		if(numeroDocumento == null) throw new ServiceException(ServiceException.MISSING_DATA, "EL NUMERO DE DOCUMENTO NO PUEDE SER NULO");
 		
 		UsuarioEntity usuarioEntity = usuarioRepository.findOne(new UsuarioPKEntity(tipoDocumentoId, numeroDocumento));
+
+		if(usuarioEntity == null) {
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE ENCUENTRA UN USUARIO CON CLAVE (TIPO DOCUMENTO=%s,NUMERO DOCUMENTO=%s)", tipoDocumentoId, numeroDocumento));
+		}
+		
 		return usuarioEntity;
 	}
 
@@ -69,12 +78,12 @@ public class UsuarioService {
 	}
 	
 	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#usuarioFrmDto.tipoDocumentoId + '-' + #usuarioFrmDto.numeroDocumento")
-	public UsuarioEntity nuevo(UsuarioFrmDto usuarioFrmDto) throws Exception {
+	public UsuarioEntity nuevo(UsuarioFrmDto usuarioFrmDto) throws ServiceException {
 		
 		PersonaEntity personaEntity = personaRepository.findOne(new PersonaPKEntity(usuarioFrmDto.getTipoDocumentoId(), usuarioFrmDto.getNumeroDocumento()));
 
 		if(personaEntity == null) {
-			throw new Exception(String.format("NO SE PUEDE ENCONTRAR UNA PERSONA CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", usuarioFrmDto.getTipoDocumentoId(), usuarioFrmDto.getNumeroDocumento()));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UNA PERSONA CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", usuarioFrmDto.getTipoDocumentoId(), usuarioFrmDto.getNumeroDocumento()));
 		}
 		
 		UsuarioEntity usuarioEntity = new UsuarioEntity(personaEntity);
@@ -94,16 +103,16 @@ public class UsuarioService {
 
 
 	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#usuarioFrmDto.tipoDocumentoId + '-' + #usuarioFrmDto.numeroDocumento")
-	public UsuarioEntity actualizar(UsuarioFrmDto usuarioFrmDto) throws Exception {
+	public UsuarioEntity actualizar(UsuarioFrmDto usuarioFrmDto) throws ServiceException {
 
 		if(usuarioFrmDto == null || usuarioFrmDto.getTipoDocumentoId() == null || usuarioFrmDto.getNumeroDocumento() == null) {
-			throw new Exception("NO SE PUEDE IDENTIFICAR EL USUARIO A ACTUALIZAR");
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, "NO SE PUEDE IDENTIFICAR EL USUARIO A ACTUALIZAR");
 		}
 
 		UsuarioEntity usuarioEntity = usuarioRepository.findOne(new UsuarioPKEntity(usuarioFrmDto.getTipoDocumentoId(), usuarioFrmDto.getNumeroDocumento()));
 
 		if(usuarioEntity == null) {
-			throw new Exception(String.format("NO SE PUEDE ENCONTRAR UN USUARIO CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", usuarioFrmDto.getTipoDocumentoId(), usuarioFrmDto.getNumeroDocumento()));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UN USUARIO CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", usuarioFrmDto.getTipoDocumentoId(), usuarioFrmDto.getNumeroDocumento()));
 		}
 		
 		usuarioEntity.setNombreUsuario(usuarioFrmDto.getNombreUsuario());
@@ -118,12 +127,12 @@ public class UsuarioService {
 	}
 
 	@Transactional @Cacheable(cacheNames=CACHE_NAME, key="#tipoDocumentoID + '-' + #numeroDocumento")
-	public void borrar(Integer tipoDocumentoID, String numeroDocumento) throws Exception {
+	public void borrar(Integer tipoDocumentoID, String numeroDocumento) throws ServiceException {
 		
 		UsuarioEntity usuarioEntity = usuarioRepository.findOne(new UsuarioPKEntity(tipoDocumentoID, numeroDocumento));
 
 		if(usuarioEntity == null) {
-			throw new Exception(String.format("NO SE PUEDE ENCONTRAR UN USUARIO CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", tipoDocumentoID, numeroDocumento));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UN USUARIO CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", tipoDocumentoID, numeroDocumento));
 		}
 		
 		usuarioRepository.delete(usuarioEntity);

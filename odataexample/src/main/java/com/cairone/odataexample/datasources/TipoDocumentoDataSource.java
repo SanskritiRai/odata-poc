@@ -1,14 +1,9 @@
 package com.cairone.odataexample.datasources;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
@@ -16,36 +11,26 @@ import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
 import com.cairone.odataexample.dtos.TipoDocumentoFrmDto;
 import com.cairone.odataexample.dtos.validators.TipoDocumentoFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.TipoDocumentoEdm;
 import com.cairone.odataexample.entities.TipoDocumentoEntity;
+import com.cairone.odataexample.exceptions.ODataBadRequestException;
 import com.cairone.odataexample.services.TipoDocumentoService;
-import com.cairone.odataexample.utils.SQLExceptionParser;
+import com.cairone.odataexample.utils.OdataExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
-import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
-import com.hazelcast.core.HazelcastInstance;
 
 @Component
-public class TipoDocumentoDataSource implements DataSource {
+public class TipoDocumentoDataSource extends AbstractDataSource {
 
 	private static final String ENTITY_SET_NAME = "TiposDocumentos";
 
 	@Autowired private TipoDocumentoService tipoDocumentoService = null;
 	@Autowired private TipoDocumentoFrmDtoValidator tipoDocumentoFrmDtoValidator = null;
-
-	@Autowired private HazelcastInstance hazelcastInstance = null;
-	
-	@PersistenceContext
-    private EntityManager entityManager;
-	
-	@Autowired
-	private MessageSource messageSource = null;
 	
 	@Override
 	public Object create(Object entity) throws ODataApplicationException {
@@ -60,12 +45,11 @@ public class TipoDocumentoDataSource implements DataSource {
 				TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoService.nuevo(tipoDocumentoFrmDto);
 				return new TipoDocumentoEdm(tipoDocumentoEntity);
 			} catch (Exception e) {
-				String message = SQLExceptionParser.parse(e);
-				throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+				throw OdataExceptionParser.parse(e);
 			}
 		}
 		
-		throw new ODataApplicationException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD TIPO DE DOCUMENTO", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+		throw new ODataBadRequestException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD TIPO DE DOCUMENTO");
 	}
 
 	@Override
@@ -73,48 +57,30 @@ public class TipoDocumentoDataSource implements DataSource {
 
     	if(entity instanceof TipoDocumentoEdm) {
     		
-    		TipoDocumentoEdm tipoDocumento = (TipoDocumentoEdm) entity;
-    		TipoDocumentoFrmDto tipoDocumentoFrmDto;
-
-        	Integer tipoDocumentoID = Integer.valueOf( keyPredicateMap.get("id").getText() );
+    		Integer tipoDocumentoID = Integer.valueOf( keyPredicateMap.get("id").getText() );
         	
-    		if(isPut) {
-    			tipoDocumentoFrmDto = new TipoDocumentoFrmDto(tipoDocumento);
-    			tipoDocumentoFrmDto.setId(tipoDocumentoID);
-    		} else {
+    		TipoDocumentoEdm tipoDocumento = (TipoDocumentoEdm) entity;
+    		
+    		TipoDocumentoFrmDto tipoDocumentoFrmDto = new TipoDocumentoFrmDto(tipoDocumento);
+    		tipoDocumentoFrmDto.setId(tipoDocumentoID);
+
+    		try
+    		{
     			TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoService.buscarPorID(tipoDocumentoID);
 	    		
-	    		if(tipoDocumentoEntity == null) {
-	    			throw new ODataApplicationException(
-	    					String.format("EL TIPO DE DOCUMENTO CON ID %s NO EXITE", tipoDocumentoID), HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
-	    		}
-	    		
-	    		// *** CAMPO << NOMBRE >>
-	    		
-	    		if(propertiesInJSON.contains("nombre")) {
-	    			tipoDocumentoEntity.setNombre(tipoDocumento.getNombre() == null || tipoDocumento.getNombre().trim().isEmpty() ? null : tipoDocumento.getNombre().trim().toUpperCase());
-	    		}
-	    		
-	    		// *** CAMPO << ABREVIATURA >>
-
-	    		if(propertiesInJSON.contains("abreviatura")) {
-	    			tipoDocumentoEntity.setAbreviatura(tipoDocumento.getAbreviatura() == null || tipoDocumento.getAbreviatura().trim().isEmpty() ? null : tipoDocumento.getAbreviatura().trim().toUpperCase());
-	    		}
-	    		
-	    		
-	    		tipoDocumentoFrmDto = new TipoDocumentoFrmDto(tipoDocumentoEntity);
-    		}
+    			if(!isPut) {
+    				if(tipoDocumentoFrmDto.getNombre() == null && !propertiesInJSON.contains("nombre")) tipoDocumentoFrmDto.setNombre(tipoDocumentoEntity.getNombre());
+    				if(tipoDocumentoFrmDto.getAbreviatura() == null && !propertiesInJSON.contains("abreviatura")) tipoDocumentoFrmDto.setAbreviatura(tipoDocumentoEntity.getAbreviatura());
+    			}
     		
-			try {
 				ValidatorUtil.validate(tipoDocumentoFrmDtoValidator, messageSource, tipoDocumentoFrmDto);
 				return new TipoDocumentoEdm( tipoDocumentoService.actualizar(tipoDocumentoFrmDto) );
 			} catch (Exception e) {
-				String message = SQLExceptionParser.parse(e);
-				throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+				throw OdataExceptionParser.parse(e);
 			}
     	}
     	
-    	throw new ODataApplicationException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD TIPO DE DOCUMENTO", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+    	throw new ODataBadRequestException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD TIPO DE DOCUMENTO");
 	}
 
 	@Override
@@ -125,8 +91,7 @@ public class TipoDocumentoDataSource implements DataSource {
     	try {
     		tipoDocumentoService.borrar(tipoDocumentoID);
 		} catch (Exception e) {
-			String message = SQLExceptionParser.parse(e);
-			throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+			throw OdataExceptionParser.parse(e);
 		}
     	
     	return null;
@@ -142,10 +107,15 @@ public class TipoDocumentoDataSource implements DataSource {
 
 		Integer tipoDocumentoID = Integer.valueOf( keyPredicateMap.get("id").getText() );
 
-		TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoService.buscarPorID(tipoDocumentoID);
-		TipoDocumentoEdm tipoDocumentoEdm = tipoDocumentoEntity == null ? null : new TipoDocumentoEdm(tipoDocumentoEntity);
-		
-		return tipoDocumentoEdm;
+		try
+		{
+			TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoService.buscarPorID(tipoDocumentoID);
+			TipoDocumentoEdm tipoDocumentoEdm = tipoDocumentoEntity == null ? null : new TipoDocumentoEdm(tipoDocumentoEntity);
+			
+			return tipoDocumentoEdm;
+		} catch (Exception e) {
+			throw OdataExceptionParser.parse(e);
+		}	
 	}
 
 	@Override

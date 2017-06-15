@@ -26,6 +26,7 @@ import com.cairone.odataexample.entities.QPersonaEntity;
 import com.cairone.odataexample.entities.QPersonaSectorEntity;
 import com.cairone.odataexample.entities.SectorEntity;
 import com.cairone.odataexample.entities.TipoDocumentoEntity;
+import com.cairone.odataexample.exceptions.ServiceException;
 import com.cairone.odataexample.repositories.LocalidadRepository;
 import com.cairone.odataexample.repositories.PersonaFotoRepository;
 import com.cairone.odataexample.repositories.PersonaRepository;
@@ -53,25 +54,33 @@ public class PersonaService {
 	@Autowired private UserTransactionManager tm = null;
 	
 	@Transactional(readOnly=true) @Cacheable(cacheNames=CACHE_NAME_PERSONA, key="#tipoDocumentoId + '-' + #numeroDocumento")
-	public PersonaEntity buscarPorId(Integer tipoDocumentoId, String numeroDocumento) {
+	public PersonaEntity buscarPorId(Integer tipoDocumentoId, String numeroDocumento) throws ServiceException {
+		
+		if(tipoDocumentoId == null) throw new ServiceException(ServiceException.MISSING_DATA, "EL ID DEL TIPO DE DOCUMENTO NO PUEDE SER NULO");
+		if(numeroDocumento == null) throw new ServiceException(ServiceException.MISSING_DATA, "EL NUMERO DE DOCUMENTO NO PUEDE SER NULO");
 		
 		PersonaEntity personaEntity = personaRepository.findOne(new PersonaPKEntity(tipoDocumentoId, numeroDocumento));
+		
+		if(personaEntity == null) {
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE ENCUENTRA UNA PERSONA CON CLAVE (TIPO DOCUMENTO=%s,NUMERO DOCUMENTO=%s)", tipoDocumentoId, numeroDocumento));
+		}
+		
 		return personaEntity;
 	}
 		
 	@Transactional @CachePut(cacheNames=CACHE_NAME_PERSONA, key="#personaFrmDto.tipoDocumentoId + '-' + #personaFrmDto.numeroDocumento")
-	public PersonaEntity nuevo(PersonaFrmDto personaFrmDto) throws Exception {
+	public PersonaEntity nuevo(PersonaFrmDto personaFrmDto) throws ServiceException {
 
 		LocalidadEntity localidadEntity = localidadRepository.findOne(new LocalidadPKEntity(personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getPaisId()));
 
 		if(localidadEntity == null) {
-			throw new Exception(String.format("NO SE ENCUENTRA LA LOCALIDAD CON ID [PAIS=%s,PROVINCIA=%s,LOCALIDAD=%s]", personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getLocalidadId()));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE ENCUENTRA LA LOCALIDAD CON ID [PAIS=%s,PROVINCIA=%s,LOCALIDAD=%s]", personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getLocalidadId()));
 		}
 		
 		TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoRepository.findOne(personaFrmDto.getTipoDocumentoId());
 
 		if(tipoDocumentoEntity == null) {
-			throw new Exception(String.format("NO SE ENCUENTRA UN TIPO DE DOCUMENTO CON ID %s", personaFrmDto.getTipoDocumentoId()));
+			throw new ServiceException(ServiceException.MISSING_DATA, String.format("NO SE ENCUENTRA UN TIPO DE DOCUMENTO CON ID %s", personaFrmDto.getTipoDocumentoId()));
 		}
 
 		PersonaEntity personaEntity = new PersonaEntity(tipoDocumentoEntity, personaFrmDto.getNumeroDocumento());
@@ -89,22 +98,22 @@ public class PersonaService {
 	}
 
 	@Transactional @CachePut(cacheNames=CACHE_NAME_PERSONA, key="#tipoDocumentoId + '-' + #numeroDocumento")
-	public PersonaEntity actualizar(PersonaFrmDto personaFrmDto) throws Exception {
+	public PersonaEntity actualizar(PersonaFrmDto personaFrmDto) throws ServiceException {
 
 		if(personaFrmDto == null || personaFrmDto.getTipoDocumentoId() == null || personaFrmDto.getNumeroDocumento() == null) {
-			throw new Exception("NO SE PUEDE IDENTIFICAR LA PERSONA A ACTUALIZAR");
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, "NO SE PUEDE IDENTIFICAR LA PERSONA A ACTUALIZAR");
 		}
 		
 		LocalidadEntity localidadEntity = localidadRepository.findOne(new LocalidadPKEntity(personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getPaisId()));
 
 		if(localidadEntity == null) {
-			throw new Exception(String.format("NO SE ENCUENTRA LA LOCALIDAD CON ID [PAIS=%s,PROVINCIA=%s,LOCALIDAD=%s]", personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getLocalidadId()));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE ENCUENTRA LA LOCALIDAD CON ID [PAIS=%s,PROVINCIA=%s,LOCALIDAD=%s]", personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getLocalidadId()));
 		}
 		
 		PersonaEntity personaEntity = personaRepository.findOne(new PersonaPKEntity(personaFrmDto.getTipoDocumentoId(), personaFrmDto.getNumeroDocumento()));
 		
 		if(personaEntity == null) {
-			throw new Exception(String.format("NO SE PUEDE ENCONTRAR UNA PERSONA CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", personaFrmDto.getTipoDocumentoId(), personaFrmDto.getNumeroDocumento()));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UNA PERSONA CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", personaFrmDto.getTipoDocumentoId(), personaFrmDto.getNumeroDocumento()));
 		}
 		
 		personaEntity.setNombres(personaFrmDto.getNombres());
@@ -119,12 +128,12 @@ public class PersonaService {
 	}
 
 	@Transactional @CacheEvict(cacheNames=CACHE_NAME_PERSONA, key="#tipoDocumentoId + '-' + #numeroDocumento")
-	public void borrar(Integer tipoDocumentoID, String numeroDocumento) throws Exception {
+	public void borrar(Integer tipoDocumentoID, String numeroDocumento) throws ServiceException {
 		
 		PersonaEntity personaEntity = personaRepository.findOne(new PersonaPKEntity(tipoDocumentoID, numeroDocumento));
 
 		if(personaEntity == null) {
-			throw new Exception(String.format("NO SE PUEDE ENCONTRAR UNA PERSONA CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", tipoDocumentoID, numeroDocumento));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UNA PERSONA CON ID [TIPODOCUMENTO=%s,NUMERODOCUMENTO=%s]", tipoDocumentoID, numeroDocumento));
 		}
 
 		
@@ -182,25 +191,34 @@ public class PersonaService {
 	// ***** FOTOS
 
 	@Transactional(readOnly=true) @CachePut(cacheNames=CACHE_NAME_PERSONA, key="#result.tipoDocumento.id + '-' + #result.numeroDocumento")
-	public PersonaEntity buscarPorFotoUUID(String uuid) {
+	public PersonaEntity buscarPorFotoUUID(String uuid) throws ServiceException {
 		
 		QPersonaEntity qPersona = QPersonaEntity.personaEntity;
 		BooleanExpression exp = qPersona.fotoUUID.eq(uuid);
 		
 		PersonaEntity personaEntity = personaRepository.findOne(exp);
-		
+
+		if(personaEntity == null) {
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE ENCUENTRA UNA PERSONA ASOCIADA CON EL ID DE FOTO %s)", uuid));
+		}
+				
 		return personaEntity;
 	}
 	
 	@Transactional(readOnly=true) @Cacheable(value=CACHE_NAME_FOTO, key="#uuid")
-	public PersonaFotoEntity buscarFoto(String uuid) {
+	public PersonaFotoEntity buscarFoto(String uuid) throws ServiceException {
 		
 		PersonaFotoEntity personaFotoEntity = personaFotoRepository.findOne(uuid);
+		
+		if(personaFotoEntity == null) {
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UNA FOTO DE PERSONA CON ID %s", uuid));
+		}
+		
 		return personaFotoEntity;
 	}
 
 	@Transactional(readOnly=true) @Cacheable(value=CACHE_NAME_FOTO, key="#uuid")
-	public PersonaFotoEntity buscarFoto(PersonaEntity personaEntity) {
+	public PersonaFotoEntity buscarFoto(PersonaEntity personaEntity) throws ServiceException {
 		return buscarFoto(personaEntity.getFotoUUID());
 	}
 
@@ -214,7 +232,7 @@ public class PersonaService {
 	}
 	
 	@Transactional
-	public void asignarFoto(PersonaEntity personaEntity, PersonaFotoEntity personaFotoEntity) throws Exception {
+	public void asignarFoto(PersonaEntity personaEntity, PersonaFotoEntity personaFotoEntity) throws ServiceException {
 		
 		// **** ACTUALIZACION DE LA FOTO EN LA BASE DE DATOS
 		
@@ -231,7 +249,7 @@ public class PersonaService {
 			transaction.enlistResource(xaResource);
 			
 		} catch(SystemException | IllegalStateException | RollbackException e) {
-			throw new Exception(e.getMessage(), e);
+			throw new ServiceException(ServiceException.TRANSACION_API_EXCEPTION, e.getMessage());
 		}
 		
 		TransactionContext context = xaResource.getTransactionContext();

@@ -20,6 +20,7 @@ import com.cairone.odataexample.edm.resources.PrestamoPendienteEdm;
 import com.cairone.odataexample.entities.PersonaEntity;
 import com.cairone.odataexample.services.PersonaService;
 import com.cairone.odataexample.services.PrestamoService;
+import com.cairone.odataexample.utils.OdataExceptionParser;
 import com.cairone.odataexample.utils.RandomString;
 import com.cairone.olingo.ext.jpa.annotations.EdmAction;
 import com.cairone.olingo.ext.jpa.annotations.EdmParameter;
@@ -44,41 +45,46 @@ public class PrestamoAltaAction implements Operation<PrestamoPendienteEdm> {
 		
 		Integer tipoDocumentoId = Integer.valueOf(keyPredicateMap.get("tipoDocumentoId").getText());
 		String numeroDocumento = CharMatcher.is('\'').trimFrom( keyPredicateMap.get("numeroDocumento").getText() );
-				
-		PersonaEntity personaEntity = personaService.buscarPorId(tipoDocumentoId, numeroDocumento);
 		
-		if(personaEntity == null) {
-			throw new ODataApplicationException(
-				String.format("NO SE ENCUENTRA UNA PERSONA CON LA CLAVE [TIPO DOCUMENTO %s - NUMERO DOCUMENTO %s]", tipoDocumentoId, numeroDocumento), 
-				HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-		}
-		
-		if(cuotas == null || cuotas.isEmpty()) {
-			throw new ODataApplicationException("NO HAY UN DETALLE DE CUOTAS PARA EL PRESTAMO", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-		}
-		
-		PrestamoPendienteEdm prestamoPendienteEdm = new PrestamoPendienteEdm();
-		prestamoPendienteEdm.setClave(RandomString.generate(6));
-		prestamoPendienteEdm.setFechaAlta(LocalDate.now());
-		prestamoPendienteEdm.setPrestamo(BigDecimal.ZERO);
-		prestamoPendienteEdm.setIntereses(BigDecimal.ZERO);
-		prestamoPendienteEdm.setIva(BigDecimal.ZERO);
-		prestamoPendienteEdm.setTotal(BigDecimal.ZERO);
-		
-		cuotas.forEach(prestamoCuotaEdm -> {
-			prestamoPendienteEdm.getCuotas().add(prestamoCuotaEdm);
+		try
+		{
+			PersonaEntity personaEntity = personaService.buscarPorId(tipoDocumentoId, numeroDocumento);
 			
-			prestamoPendienteEdm.setPrestamo( prestamoPendienteEdm.getPrestamo().add(prestamoCuotaEdm.getCapital()) );
-			prestamoPendienteEdm.setIntereses( prestamoPendienteEdm.getIntereses().add(prestamoCuotaEdm.getInteres()) );
-			prestamoPendienteEdm.setIva( prestamoPendienteEdm.getIva().add(prestamoCuotaEdm.getIva()) );
-		});
-		
-		prestamoPendienteEdm.setTotal(prestamoPendienteEdm.getIntereses().add(prestamoPendienteEdm.getIva()).add(prestamoPendienteEdm.getPrestamo()));
-		prestamoPendienteEdm.setPersona(new PersonaEdm(personaEntity));
-
-		Map<String, PrestamoPendienteEdm> map = hazelcastInstance.getMap(PrestamoService.CACHE_NAME_PENDIENTES);
-		map.put(prestamoPendienteEdm.getClave(), prestamoPendienteEdm);
-		
-		return prestamoPendienteEdm;
+			if(personaEntity == null) {
+				throw new ODataApplicationException(
+					String.format("NO SE ENCUENTRA UNA PERSONA CON LA CLAVE [TIPO DOCUMENTO %s - NUMERO DOCUMENTO %s]", tipoDocumentoId, numeroDocumento), 
+					HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+			}
+			
+			if(cuotas == null || cuotas.isEmpty()) {
+				throw new ODataApplicationException("NO HAY UN DETALLE DE CUOTAS PARA EL PRESTAMO", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+			}
+			
+			PrestamoPendienteEdm prestamoPendienteEdm = new PrestamoPendienteEdm();
+			prestamoPendienteEdm.setClave(RandomString.generate(6));
+			prestamoPendienteEdm.setFechaAlta(LocalDate.now());
+			prestamoPendienteEdm.setPrestamo(BigDecimal.ZERO);
+			prestamoPendienteEdm.setIntereses(BigDecimal.ZERO);
+			prestamoPendienteEdm.setIva(BigDecimal.ZERO);
+			prestamoPendienteEdm.setTotal(BigDecimal.ZERO);
+			
+			cuotas.forEach(prestamoCuotaEdm -> {
+				prestamoPendienteEdm.getCuotas().add(prestamoCuotaEdm);
+				
+				prestamoPendienteEdm.setPrestamo( prestamoPendienteEdm.getPrestamo().add(prestamoCuotaEdm.getCapital()) );
+				prestamoPendienteEdm.setIntereses( prestamoPendienteEdm.getIntereses().add(prestamoCuotaEdm.getInteres()) );
+				prestamoPendienteEdm.setIva( prestamoPendienteEdm.getIva().add(prestamoCuotaEdm.getIva()) );
+			});
+			
+			prestamoPendienteEdm.setTotal(prestamoPendienteEdm.getIntereses().add(prestamoPendienteEdm.getIva()).add(prestamoPendienteEdm.getPrestamo()));
+			prestamoPendienteEdm.setPersona(new PersonaEdm(personaEntity));
+	
+			Map<String, PrestamoPendienteEdm> map = hazelcastInstance.getMap(PrestamoService.CACHE_NAME_PENDIENTES);
+			map.put(prestamoPendienteEdm.getClave(), prestamoPendienteEdm);
+			
+			return prestamoPendienteEdm;
+		} catch (Exception e) {
+			throw OdataExceptionParser.parse(e);
+		}
 	}
 }

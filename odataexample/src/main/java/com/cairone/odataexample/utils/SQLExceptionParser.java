@@ -6,19 +6,20 @@ import javax.persistence.PersistenceException;
 import javax.transaction.RollbackException;
 
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.DataException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.UnexpectedRollbackException;
 
 public class SQLExceptionParser {
 
-	public static final String parse(Exception e) {
+	public static final SQLException getSQLException(Exception e) {
 		if(e instanceof DataIntegrityViolationException) {
 			DataIntegrityViolationException dataIntegrityViolationException = (DataIntegrityViolationException) e;
 			if(dataIntegrityViolationException.getCause() != null && dataIntegrityViolationException.getCause() instanceof ConstraintViolationException) {
 				ConstraintViolationException constraintViolationException = (ConstraintViolationException) dataIntegrityViolationException.getCause();
 				if(constraintViolationException.getCause() != null && constraintViolationException.getCause() instanceof SQLException) {
 					SQLException sqlException = (SQLException) constraintViolationException.getCause();
-					return sqlException.getMessage();
+					return sqlException;
 				}
 			}
 		}
@@ -32,12 +33,27 @@ public class SQLExceptionParser {
 						ConstraintViolationException constraintViolationException = (ConstraintViolationException) persistenceException.getCause();
 						if(constraintViolationException.getCause() != null && constraintViolationException.getCause() instanceof SQLException) {
 							SQLException sqlException = (SQLException) constraintViolationException.getCause();
-							return sqlException.getMessage();
+							return sqlException;
 						}	
+					} else if(persistenceException.getCause() != null && persistenceException.getCause() instanceof DataException) {
+						DataException dataException = (DataException) persistenceException.getCause();
+						if(dataException.getCause() != null && dataException.getCause() instanceof SQLException) {
+							SQLException sqlException = (SQLException) dataException.getCause();
+							return sqlException;
+						}
 					}
 				}
 			}
 		}
-		return e.getMessage();
+		return null;
+	}
+	
+	public static final String parse(Exception e) {
+		SQLException sqlException = getSQLException(e);
+		if(sqlException == null) {
+			return e.getMessage();
+		} else {
+			return sqlException.getMessage();
+		}
 	}
 }

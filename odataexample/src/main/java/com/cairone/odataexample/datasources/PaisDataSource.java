@@ -1,14 +1,9 @@
 package com.cairone.odataexample.datasources;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
@@ -16,36 +11,26 @@ import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
 import com.cairone.odataexample.dtos.PaisFrmDto;
 import com.cairone.odataexample.dtos.validators.PaisFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.PaisEdm;
 import com.cairone.odataexample.entities.PaisEntity;
+import com.cairone.odataexample.exceptions.ODataBadRequestException;
 import com.cairone.odataexample.services.PaisService;
-import com.cairone.odataexample.utils.SQLExceptionParser;
+import com.cairone.odataexample.utils.OdataExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
-import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.cairone.olingo.ext.jpa.query.JPQLQuery;
 import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
-import com.hazelcast.core.HazelcastInstance;
 
 @Component
-public class PaisDataSource implements DataSource {
+public class PaisDataSource extends AbstractDataSource {
 	
 	private static final String ENTITY_SET_NAME = "Paises";
 	
 	@Autowired private PaisService paisService = null;
 	@Autowired private PaisFrmDtoValidator paisFrmDtoValidator = null;
-	
-	@Autowired private HazelcastInstance hazelcastInstance = null;
-	
-	@PersistenceContext
-    private EntityManager entityManager;
-		
-	@Autowired
-	private MessageSource messageSource = null;
 	
 	@Override
 	public Object create(Object entity) throws ODataApplicationException {
@@ -60,12 +45,11 @@ public class PaisDataSource implements DataSource {
 				PaisEntity paisEntity = paisService.nuevo(paisFrmDto);
 				return new PaisEdm(paisEntity);
 			} catch (Exception e) {
-				String message = SQLExceptionParser.parse(e);
-				throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+				throw OdataExceptionParser.parse(e);
 			}
 		}
 		
-		throw new ODataApplicationException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD PAIS", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+		throw new ODataBadRequestException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD PAIS");
 	}
 	
 	@Override
@@ -73,47 +57,32 @@ public class PaisDataSource implements DataSource {
 		
     	if(entity instanceof PaisEdm) {
     		
-    		PaisEdm pais = (PaisEdm) entity;
-    		PaisFrmDto paisFrmDto;
-
-        	Integer paisID = Integer.valueOf( keyPredicateMap.get("id").getText() );
+    		Integer paisID = Integer.valueOf( keyPredicateMap.get("id").getText() );
         	
-    		if(isPut) {
-    			paisFrmDto = new PaisFrmDto(pais);
-    			paisFrmDto.setId(paisID);
-    		} else {
-	    		PaisEntity paisEntity = paisService.buscarPorID(paisID);
-	    		
-	    		if(paisEntity == null) {
-	    			throw new ODataApplicationException(
-	    					String.format("EL PAIS CON ID %s NO EXITE", pais.getId()), HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
-	    		}
-	    		
-	    		// *** CAMPO << NOMBRE >>
-	    		
-	    		if(propertiesInJSON.contains("nombre")) {
-	    			paisEntity.setNombre(pais.getNombre() == null || pais.getNombre().trim().isEmpty() ? null : pais.getNombre().trim().toUpperCase());
-	    		}
-	    		
-	    		// *** CAMPO << PREFIJO >>
-	    		
-	    		if(propertiesInJSON.contains("prefijo")) {
-	    			paisEntity.setPrefijo(pais.getPrefijo() == null ? null : pais.getPrefijo());
-	    		}
-	    		
-	    		paisFrmDto = new PaisFrmDto(paisEntity);
-    		}
+    		PaisEdm pais = (PaisEdm) entity;
+    		PaisFrmDto paisFrmDto = new PaisFrmDto(pais);
     		
-			try {
+    		paisFrmDto.setId(paisID);
+
+    		try
+    		{
+    			PaisEntity paisEntity = paisService.buscarPorID(paisID);
+	    		
+    			if(!isPut) {
+    				if(paisFrmDto.getNombre() == null && !propertiesInJSON.contains("nombre")) paisFrmDto.setNombre(paisEntity.getNombre());
+    				if(paisFrmDto.getPrefijo() == null && !propertiesInJSON.contains("prefijo")) paisFrmDto.setPrefijo(paisEntity.getPrefijo());
+    			}
+    			
 				ValidatorUtil.validate(paisFrmDtoValidator, messageSource, paisFrmDto);
-				return new PaisEdm( paisService.actualizar(paisFrmDto) );
+				paisEntity = paisService.actualizar(paisFrmDto);
+				
+				return new PaisEdm(paisEntity);
 			} catch (Exception e) {
-				String message = SQLExceptionParser.parse(e);
-				throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+				throw OdataExceptionParser.parse(e);
 			}
     	}
     	
-    	throw new ODataApplicationException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD PAIS", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+    	throw new ODataBadRequestException("LOS DATOS NO CORRESPONDEN A LA ENTIDAD PAIS");
 	}
 
 	@Override
@@ -124,8 +93,7 @@ public class PaisDataSource implements DataSource {
     	try {
 			paisService.borrar(paisID);
 		} catch (Exception e) {
-			String message = SQLExceptionParser.parse(e);
-			throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+			throw OdataExceptionParser.parse(e);
 		}
     	
     	return null;
@@ -141,10 +109,15 @@ public class PaisDataSource implements DataSource {
 		
 		Integer paisID = Integer.valueOf( keyPredicateMap.get("id").getText() );
 		
-		PaisEntity paisEntity = paisService.buscarPorID(paisID);
-		PaisEdm paisEdm = paisEntity == null ? null : new PaisEdm(paisEntity);
+		try
+    	{
+			PaisEntity paisEntity = paisService.buscarPorID(paisID);
+			PaisEdm paisEdm = new PaisEdm(paisEntity);
 		
-		return paisEdm;
+			return paisEdm;
+    	} catch (Exception e) {
+			throw OdataExceptionParser.parse(e);
+		}
 	}
 
 	@Override

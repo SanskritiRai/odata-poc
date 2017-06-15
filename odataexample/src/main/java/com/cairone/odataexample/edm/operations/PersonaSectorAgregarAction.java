@@ -15,8 +15,10 @@ import com.cairone.odataexample.edm.resources.PersonaSectorEdm;
 import com.cairone.odataexample.entities.PersonaEntity;
 import com.cairone.odataexample.entities.PersonaSectorEntity;
 import com.cairone.odataexample.entities.SectorEntity;
+import com.cairone.odataexample.exceptions.ServiceException;
 import com.cairone.odataexample.services.PersonaService;
 import com.cairone.odataexample.services.SectorService;
+import com.cairone.odataexample.utils.OdataExceptionParser;
 import com.cairone.olingo.ext.jpa.annotations.EdmAction;
 import com.cairone.olingo.ext.jpa.annotations.EdmParameter;
 import com.cairone.olingo.ext.jpa.annotations.EdmReturnType;
@@ -39,29 +41,38 @@ public class PersonaSectorAgregarAction implements Operation<List<PersonaSectorE
 
 		Integer tipoDocumentoId = Integer.valueOf(keyPredicateMap.get("tipoDocumentoId").getText());
 		String numeroDocumento = CharMatcher.is('\'').trimFrom( keyPredicateMap.get("numeroDocumento").getText() );
+		
+		try
+		{
+			PersonaEntity personaEntity = personaService.buscarPorId(tipoDocumentoId, numeroDocumento);
+			List<SectorEntity> sectorEntitiesQuitar = sectorService.buscarPorPersona(personaEntity)
+					.stream()
+					.filter(sectorEntity -> {
+						return !sectoresID.contains(sectorEntity.getId());
+					}).
+					collect(Collectors.toList());
+			
+			sectorEntitiesQuitar.forEach(sectorEntity -> {
+				sectorService.quitarPersona(sectorEntity, personaEntity);
+			});
+			
+			List<PersonaSectorEdm> personaSectorEdms = new ArrayList<PersonaSectorEdm>();
+			sectoresID.forEach(sectorID -> {
 				
-		PersonaEntity personaEntity = personaService.buscarPorId(tipoDocumentoId, numeroDocumento);
-		List<SectorEntity> sectorEntitiesQuitar = sectorService.buscarPorPersona(personaEntity)
-				.stream()
-				.filter(sectorEntity -> {
-					return !sectoresID.contains(sectorEntity.getId());
-				}).
-				collect(Collectors.toList());
-		
-		sectorEntitiesQuitar.forEach(sectorEntity -> {
-			sectorService.quitarPersona(sectorEntity, personaEntity);
-		});
-		
-		List<PersonaSectorEdm> personaSectorEdms = new ArrayList<PersonaSectorEdm>();
-		sectoresID.forEach(sectorID -> {
+				try {
+					SectorEntity sectorEntity = sectorService.buscarPorID(sectorID);
+					PersonaSectorEntity personaSectorEntity = sectorService.agregarPersona(sectorEntity, personaEntity);
+					
+					PersonaSectorEdm personaSectorEdm = new PersonaSectorEdm(personaSectorEntity);
+					personaSectorEdms.add(personaSectorEdm);
+				} catch (Exception e) {
+					//FIXME NO HACER NADA
+				}
+			});
 			
-			SectorEntity sectorEntity = sectorService.buscarPorID(sectorID);
-			PersonaSectorEntity personaSectorEntity = sectorService.agregarPersona(sectorEntity, personaEntity);
-			
-			PersonaSectorEdm personaSectorEdm = new PersonaSectorEdm(personaSectorEntity);
-			personaSectorEdms.add(personaSectorEdm);
-		});
-		
-		return personaSectorEdms;
+			return personaSectorEdms;
+		} catch (ServiceException e) {
+			throw OdataExceptionParser.parse(e);
+		}
 	}
 }

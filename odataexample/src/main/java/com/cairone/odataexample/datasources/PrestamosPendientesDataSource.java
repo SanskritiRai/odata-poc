@@ -2,32 +2,27 @@ package com.cairone.odataexample.datasources;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
-import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.cairone.odataexample.edm.resources.PrestamoPendienteEdm;
+import com.cairone.odataexample.exceptions.ODataForbiddenException;
+import com.cairone.odataexample.exceptions.ODataResourceNotFoundException;
 import com.cairone.odataexample.services.PrestamoService;
-import com.cairone.olingo.ext.jpa.interfaces.DataSource;
 import com.google.common.base.CharMatcher;
-import com.hazelcast.core.HazelcastInstance;
 
 @Component
-public class PrestamosPendientesDataSource implements DataSource {
+public class PrestamosPendientesDataSource extends AbstractDataSource {
 
 	private static final String ENTITY_SET_NAME = "PrestamosPendientes";
 	
-	@Autowired private HazelcastInstance hazelcastInstance = null;
-
 	@Override
 	public String isSuitableFor() {
 		return ENTITY_SET_NAME;
@@ -35,12 +30,12 @@ public class PrestamosPendientesDataSource implements DataSource {
 
 	@Override
 	public Object create(Object entity) throws ODataApplicationException {
-		throw new ODataApplicationException("OPERACION NO PERMITIDA", HttpStatusCode.FORBIDDEN.getStatusCode(), Locale.ENGLISH);
+		throw new ODataForbiddenException("OPERACION NO PERMITIDA");
 	}
 
 	@Override
 	public Object update(Map<String, UriParameter> keyPredicateMap, Object entity, List<String> propertiesInJSON, boolean isPut) throws ODataApplicationException {
-		throw new ODataApplicationException("OPERACION NO PERMITIDA", HttpStatusCode.FORBIDDEN.getStatusCode(), Locale.ENGLISH);
+		throw new ODataForbiddenException("OPERACION NO PERMITIDA");
 	}
 
 	@Override
@@ -61,9 +56,7 @@ public class PrestamosPendientesDataSource implements DataSource {
 		PrestamoPendienteEdm prestamoPendienteEdm = map.get(clave);
 		
 		if(prestamoPendienteEdm == null) {
-			throw new ODataApplicationException(
-					String.format("NO HAY UN PRESTAMO PENDIENTE CON CLAVE %s", clave), 
-					HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
+			throw new ODataResourceNotFoundException(String.format("NO HAY UN PRESTAMO PENDIENTE CON CLAVE %s", clave));
 		}
 		
 		return prestamoPendienteEdm;
