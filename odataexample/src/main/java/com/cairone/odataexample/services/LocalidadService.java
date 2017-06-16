@@ -65,21 +65,21 @@ public class LocalidadService {
 	}
 
 	@Transactional @CachePut(cacheNames=CACHE_NAME, key="#localidadFrmDto.paisId + '-' + #localidadFrmDto.provinciaId + '-' + #localidadFrmDto.localidadId")
-	public LocalidadEntity actualizar(LocalidadFrmDto provinciaFrmDto) throws ServiceException {
+	public LocalidadEntity actualizar(LocalidadFrmDto localidadFrmDto) throws ServiceException {
 		
-		if(provinciaFrmDto == null || provinciaFrmDto.getLocalidadId() == null || provinciaFrmDto.getProvinciaId() == null || provinciaFrmDto.getPaisId() == null) {
+		if(localidadFrmDto == null || localidadFrmDto.getLocalidadId() == null || localidadFrmDto.getProvinciaId() == null || localidadFrmDto.getPaisId() == null) {
 			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, "NO SE PUEDE IDENTIFICAR LA LOCALIDAD A ACTUALIZAR");
 		}
 		
-		LocalidadEntity localidadEntity = localidadRepository.findOne(new LocalidadPKEntity(provinciaFrmDto.getPaisId(), provinciaFrmDto.getProvinciaId(), provinciaFrmDto.getLocalidadId()));
+		LocalidadEntity localidadEntity = localidadRepository.findOne(new LocalidadPKEntity(localidadFrmDto.getPaisId(), localidadFrmDto.getProvinciaId(), localidadFrmDto.getLocalidadId()));
 		
 		if(localidadEntity == null) {
-			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UNA LOCALIDAD CON ID [PAIS=%s,PROVINCIA=%s,LOCALIDAD=%s]", provinciaFrmDto.getPaisId(), provinciaFrmDto.getProvinciaId(), provinciaFrmDto.getLocalidadId()));
+			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE PUEDE ENCONTRAR UNA LOCALIDAD CON ID [PAIS=%s,PROVINCIA=%s,LOCALIDAD=%s]", localidadFrmDto.getPaisId(), localidadFrmDto.getProvinciaId(), localidadFrmDto.getLocalidadId()));
 		}
 		
-		localidadEntity.setNombre(provinciaFrmDto.getNombre());
-		localidadEntity.setCp(provinciaFrmDto.getCp());
-		localidadEntity.setPrefijo(provinciaFrmDto.getPrefijo());
+		localidadEntity.setNombre(localidadFrmDto.getNombre());
+		localidadEntity.setCp(localidadFrmDto.getCp());
+		localidadEntity.setPrefijo(localidadFrmDto.getPrefijo());
 		
 		localidadRepository.save(localidadEntity);
 		
