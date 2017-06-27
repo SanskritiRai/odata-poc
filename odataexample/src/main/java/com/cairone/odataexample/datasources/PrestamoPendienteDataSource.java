@@ -19,7 +19,7 @@ import com.cairone.odataexample.services.PrestamoService;
 import com.google.common.base.CharMatcher;
 
 @Component
-public class PrestamosPendientesDataSource extends AbstractDataSource {
+public class PrestamoPendienteDataSource extends AbstractDataSource {
 
 	private static final String ENTITY_SET_NAME = "PrestamosPendientes";
 	
