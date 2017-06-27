@@ -1,5 +1,6 @@
 package com.cairone.odataexample.entities;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -16,7 +17,9 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity @Table(name="usuarios")
-public class UsuarioEntity {
+public class UsuarioEntity implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId private UsuarioPKEntity pk = null;
 

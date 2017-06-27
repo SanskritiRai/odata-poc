@@ -5,7 +5,7 @@
   <groupId>com.cairone.olingo</groupId>
   <artifactId>odataexample</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <packaging>war</packaging>
 
 	<name>odataexample</name>
 	<url>http://maven.apache.org</url>

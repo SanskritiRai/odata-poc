@@ -1,5 +1,6 @@
 package com.cairone.odataexample.entities;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 import javax.persistence.Column;
@@ -10,7 +11,9 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity @Table(name="prestamos_cuotas")
-public class PrestamoCuotaEntity {
+public class PrestamoCuotaEntity implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId
 	private PrestamoCuotaPKEntity pk = null;

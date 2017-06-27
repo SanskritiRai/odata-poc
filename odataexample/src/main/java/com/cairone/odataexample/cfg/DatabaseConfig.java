@@ -19,6 +19,7 @@ public class DatabaseConfig {
 	private final static Logger LOG = LoggerFactory.getLogger(DatabaseConfig.class);
 	
 	@Value("${database.serverName}") private String serverName = null;
+	@Value("${database.instanceName}") private String instanceName = null;
 	@Value("${database.databaseName}") private String databaseName = null;
 	@Value("${database.user}") private String user = null;
 	@Value("${database.password}") private String password = null;
@@ -34,6 +35,8 @@ public class DatabaseConfig {
 		xaDataSource.setDatabaseName(databaseName);
 		xaDataSource.setUser(user);
 		xaDataSource.setPassword(password);
+		
+		if(!instanceName.isEmpty()) xaDataSource.setInstanceName(instanceName);
 		
 		AtomikosDataSourceBean ds = new AtomikosDataSourceBean();
 		
