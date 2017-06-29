@@ -28,7 +28,7 @@ import com.google.common.base.CharMatcher;
 @Component
 public class UsuarioDataSource extends AbstractDataSource {
 
-	private static final String ENTITY_SET_NAME = "Usuarios";
+	public static final String ENTITY_SET_NAME = "Usuarios";
 	
 	@Autowired private UsuarioService usuarioService = null;
 	@Autowired private UsuarioFrmDtoValidator usuarioFrmDtoValidator = null;

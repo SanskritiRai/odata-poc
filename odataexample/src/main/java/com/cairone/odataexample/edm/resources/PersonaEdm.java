@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.cairone.odataexample.OdataExample;
+import com.cairone.odataexample.datasources.PersonaDataSource;
 import com.cairone.odataexample.entities.PersonaEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
@@ -15,7 +16,7 @@ import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
 import com.cairone.olingo.ext.jpa.annotations.ODataJPAProperty;
 
 @EdmEntity(name = "Persona", key = { "tipoDocumentoId", "numeroDocumento" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
-@EdmEntitySet("Personas")
+@EdmEntitySet(PersonaDataSource.ENTITY_SET_NAME)
 @ODataJPAEntity("PersonaEntity")
 public class PersonaEdm implements Serializable {
 

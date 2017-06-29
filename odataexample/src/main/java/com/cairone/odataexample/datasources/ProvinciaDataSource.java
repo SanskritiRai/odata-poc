@@ -27,7 +27,7 @@ import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 @Component
 public class ProvinciaDataSource extends AbstractDataSource {
 	
-	private static final String ENTITY_SET_NAME = "Provincias";
+	public static final String ENTITY_SET_NAME = "Provincias";
 	
 	@Autowired private ProvinciaService provinciaService = null;
 	@Autowired private ProvinciaFrmDtoValidator provinciaFrmDtoValidator = null;

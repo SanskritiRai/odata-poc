@@ -21,7 +21,7 @@ import com.google.common.base.CharMatcher;
 @Component
 public class PrestamoPendienteDataSource extends AbstractDataSource {
 
-	private static final String ENTITY_SET_NAME = "PrestamosPendientes";
+	public static final String ENTITY_SET_NAME = "PrestamosPendientes";
 	
 	@Override
 	public String isSuitableFor() {

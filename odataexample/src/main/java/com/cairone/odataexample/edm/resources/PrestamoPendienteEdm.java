@@ -7,13 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.cairone.odataexample.OdataExample;
+import com.cairone.odataexample.datasources.PrestamoPendienteDataSource;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
 import com.cairone.olingo.ext.jpa.annotations.EdmNavigationProperty;
 import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 
 @EdmEntity(name = "PrestamoPendiente", key = { "clave" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
-@EdmEntitySet("PrestamosPendientes")
+@EdmEntitySet(PrestamoPendienteDataSource.ENTITY_SET_NAME)
 public class PrestamoPendienteEdm implements Serializable {
 
 	private static final long serialVersionUID = 1L;

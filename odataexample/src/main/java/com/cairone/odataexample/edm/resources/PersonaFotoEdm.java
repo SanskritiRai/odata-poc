@@ -1,13 +1,14 @@
 package com.cairone.odataexample.edm.resources;
 
 import com.cairone.odataexample.OdataExample;
+import com.cairone.odataexample.datasources.PersonaFotoDataSource;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
 import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
 
 @EdmEntity(name = "PersonaFoto", hasStream=true, key = { "uuid" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
-@EdmEntitySet("PersonasFotos")
+@EdmEntitySet(PersonaFotoDataSource.ENTITY_SET_NAME)
 @ODataJPAEntity("PersonaFotoEntity")
 public class PersonaFotoEdm {
 	

@@ -17,7 +17,7 @@ import com.cairone.odataexample.exceptions.ODataNotImplementedException;
 @Component
 public class PrestamoCuotaDataSource extends AbstractDataSource {
 
-	private static final String ENTITY_SET_NAME = "PrestamoCuotas";
+	public static final String ENTITY_SET_NAME = "PrestamoCuotas";
 
 	@Override
 	public String isSuitableFor() {

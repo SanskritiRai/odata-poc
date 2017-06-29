@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.cairone.odataexample.OdataExample;
+import com.cairone.odataexample.datasources.UsuarioDataSource;
 import com.cairone.odataexample.entities.UsuarioEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
@@ -14,8 +15,8 @@ import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
 import com.cairone.olingo.ext.jpa.annotations.ODataJPAProperty;
 
 @EdmEntity(name = "Usuario", key = { "tipoDocumentoId", "numeroDocumento" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
-@EdmEntitySet("Usuarios")
-@ODataJPAEntity("com.cairone.odataexample.entities.UsuarioEntity")
+@EdmEntitySet(UsuarioDataSource.ENTITY_SET_NAME)
+@ODataJPAEntity("UsuarioEntity")
 public class UsuarioEdm {
 
 	@EdmProperty(name="tipoDocumentoId", nullable = false) @ODataJPAProperty("persona.tipoDocumento.id")

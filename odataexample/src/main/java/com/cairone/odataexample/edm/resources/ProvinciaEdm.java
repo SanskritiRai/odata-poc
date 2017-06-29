@@ -3,6 +3,7 @@ package com.cairone.odataexample.edm.resources;
 import java.io.Serializable;
 
 import com.cairone.odataexample.OdataExample;
+import com.cairone.odataexample.datasources.ProvinciaDataSource;
 import com.cairone.odataexample.entities.ProvinciaEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
@@ -12,7 +13,7 @@ import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
 import com.cairone.olingo.ext.jpa.annotations.ODataJPAProperty;
 
 @EdmEntity(name = "Provincia", key = { "paisId", "id" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
-@EdmEntitySet("Provincias")
+@EdmEntitySet(ProvinciaDataSource.ENTITY_SET_NAME)
 @ODataJPAEntity("ProvinciaEntity")
 public class ProvinciaEdm implements Serializable {
 

@@ -27,7 +27,7 @@ import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 @Component
 public class PaisDataSource extends AbstractDataSource {
 	
-	private static final String ENTITY_SET_NAME = "Paises";
+	public static final String ENTITY_SET_NAME = "Paises";
 	
 	@Autowired private PaisService paisService = null;
 	@Autowired private PaisFrmDtoValidator paisFrmDtoValidator = null;

@@ -25,7 +25,7 @@ import com.google.common.base.CharMatcher;
 @Component
 public class PermisoDataSource extends AbstractDataSource {
 
-	private static final String ENTITY_SET_NAME = "Permisos";
+	public static final String ENTITY_SET_NAME = "Permisos";
 
 	@Autowired private PermisoService permisoService = null;
 

@@ -5,12 +5,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import com.cairone.odataexample.OdataExample;
+import com.cairone.odataexample.datasources.PrestamoCuotaDataSource;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
 import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 
 @EdmEntity(name = "PrestamoCuota", key = { "numero" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
-@EdmEntitySet("PrestamoCuotas")
+@EdmEntitySet(PrestamoCuotaDataSource.ENTITY_SET_NAME)
 public class PrestamoCuotaEdm implements Comparable<PrestamoCuotaEdm>, Serializable {
 
 	private static final long serialVersionUID = 1L;

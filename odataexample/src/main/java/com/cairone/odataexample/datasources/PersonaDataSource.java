@@ -30,7 +30,7 @@ import com.google.common.base.CharMatcher;
 @Component
 public class PersonaDataSource extends AbstractDataSource {
 
-	private static final String ENTITY_SET_NAME = "Personas";
+	public static final String ENTITY_SET_NAME = "Personas";
 	
 	@Autowired private PersonaService personaService = null;
 	@Autowired private LocalidadService localidadService = null;

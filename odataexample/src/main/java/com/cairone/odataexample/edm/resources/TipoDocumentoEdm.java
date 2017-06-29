@@ -1,6 +1,7 @@
 package com.cairone.odataexample.edm.resources;
 
 import com.cairone.odataexample.OdataExample;
+import com.cairone.odataexample.datasources.TipoDocumentoDataSource;
 import com.cairone.odataexample.entities.TipoDocumentoEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
@@ -8,8 +9,8 @@ import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 import com.cairone.olingo.ext.jpa.annotations.ODataJPAEntity;
 
 @EdmEntity(name = "TipoDocumento", key = { "id" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
-@EdmEntitySet("TiposDocumentos")
-@ODataJPAEntity("com.cairone.odataexample.entities.TipoDocumentoEntity")
+@EdmEntitySet(TipoDocumentoDataSource.ENTITY_SET_NAME)
+@ODataJPAEntity("TipoDocumentoEntity")
 public class TipoDocumentoEdm {
 
 	@EdmProperty(name="id", nullable = false)

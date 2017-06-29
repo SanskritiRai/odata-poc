@@ -29,7 +29,7 @@ import com.google.common.base.CharMatcher;
 @Component
 public class PersonaFotoDataSource extends AbstractDataSource implements MediaDataSource {
 	
-	private static final String ENTITY_SET_NAME = "PersonasFotos";
+	public static final String ENTITY_SET_NAME = "PersonasFotos";
 	
 	@Autowired private PersonaService personaService = null;
 	

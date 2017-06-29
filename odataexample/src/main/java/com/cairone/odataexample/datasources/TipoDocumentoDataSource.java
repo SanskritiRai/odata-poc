@@ -27,7 +27,7 @@ import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 @Component
 public class TipoDocumentoDataSource extends AbstractDataSource {
 
-	private static final String ENTITY_SET_NAME = "TiposDocumentos";
+	public static final String ENTITY_SET_NAME = "TiposDocumentos";
 
 	@Autowired private TipoDocumentoService tipoDocumentoService = null;
 	@Autowired private TipoDocumentoFrmDtoValidator tipoDocumentoFrmDtoValidator = null;

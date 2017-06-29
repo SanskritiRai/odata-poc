@@ -6,13 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.cairone.odataexample.OdataExample;
+import com.cairone.odataexample.datasources.PersonaSectorDataSource;
 import com.cairone.odataexample.entities.PersonaSectorEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntity;
 import com.cairone.olingo.ext.jpa.annotations.EdmEntitySet;
 import com.cairone.olingo.ext.jpa.annotations.EdmProperty;
 
 @EdmEntity(name = "PersonaSector", key = { "id" }, namespace = OdataExample.NAME_SPACE, containerName = OdataExample.CONTAINER_NAME)
-@EdmEntitySet("PersonasSectores")
+@EdmEntitySet(PersonaSectorDataSource.ENTITY_SET_NAME)
 public class PersonaSectorEdm implements Serializable {
 
 	private static final long serialVersionUID = 1L;

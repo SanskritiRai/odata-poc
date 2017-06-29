@@ -31,7 +31,7 @@ import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 @Component
 public class SectorDataSource extends AbstractDataSource {
 
-	private static final String ENTITY_SET_NAME = "Sectores";
+	public static final String ENTITY_SET_NAME = "Sectores";
 
 	@Autowired private SectorService sectorService = null;
 	@Autowired private SectorFrmDtoValidator sectorFrmDtoValidator = null;

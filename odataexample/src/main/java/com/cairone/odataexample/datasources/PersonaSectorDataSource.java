@@ -16,7 +16,7 @@ import com.cairone.odataexample.exceptions.ODataForbiddenException;
 @Component
 public class PersonaSectorDataSource extends AbstractDataSource {
 
-	private static final String ENTITY_SET_NAME = "PersonasSectores";
+	public static final String ENTITY_SET_NAME = "PersonasSectores";
 
 	@Override
 	public String isSuitableFor() {
