@@ -71,7 +71,7 @@ public class PersonaService {
 	@Transactional @CachePut(cacheNames=CACHE_NAME_PERSONA, key="#personaFrmDto.tipoDocumentoId + '-' + #personaFrmDto.numeroDocumento")
 	public PersonaEntity nuevo(PersonaFrmDto personaFrmDto) throws ServiceException {
 
-		LocalidadEntity localidadEntity = localidadRepository.findOne(new LocalidadPKEntity(personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getPaisId()));
+		LocalidadEntity localidadEntity = localidadRepository.findOne(new LocalidadPKEntity(personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getLocalidadId()));
 
 		if(localidadEntity == null) {
 			throw new ServiceException(ServiceException.ENTITY_NOT_FOUND, String.format("NO SE ENCUENTRA LA LOCALIDAD CON ID [PAIS=%s,PROVINCIA=%s,LOCALIDAD=%s]", personaFrmDto.getPaisId(), personaFrmDto.getProvinciaId(), personaFrmDto.getLocalidadId()));

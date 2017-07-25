@@ -54,7 +54,7 @@ public class PersonaEntity implements Serializable {
 	@Column(name="uuid_foto", nullable = true, length = 36)
 	private String fotoUUID = null;
 	
-	@OneToMany(orphanRemoval=true, mappedBy="persona", fetch=FetchType.EAGER)
+	@OneToMany(mappedBy="persona", fetch=FetchType.EAGER)
 	private List<PersonaSectorEntity> personaSectorEntities = null;
 	
 	public PersonaEntity() {

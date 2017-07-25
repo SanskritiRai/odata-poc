@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -126,7 +127,7 @@ public class UsuarioService {
 		return usuarioEntity;
 	}
 
-	@Transactional @Cacheable(cacheNames=CACHE_NAME, key="#tipoDocumentoID + '-' + #numeroDocumento")
+	@Transactional @CacheEvict(CACHE_NAME)
 	public void borrar(Integer tipoDocumentoID, String numeroDocumento) throws ServiceException {
 		
 		UsuarioEntity usuarioEntity = usuarioRepository.findOne(new UsuarioPKEntity(tipoDocumentoID, numeroDocumento));
