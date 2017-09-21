@@ -21,6 +21,7 @@ public class DatabaseConfigBuilderMysql extends DatabaseConfigAbstractBuilder {
 		xaDataSource.setPinGlobalTxToPhysicalConnection(true);
 		xaDataSource.setUser(user);
 		xaDataSource.setPassword(password);
+		xaDataSource.setPinGlobalTxToPhysicalConnection(true);
 		
 		AtomikosDataSourceBean ds = new AtomikosDataSourceBean();
 		

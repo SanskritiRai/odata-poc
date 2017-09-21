@@ -9,7 +9,8 @@ import com.cairone.olingo.ext.jpa.interfaces.OdataEnum;
 public enum GeneroOdataEnum implements OdataEnum<GeneroOdataEnum>{
 	MASCULINO(1), FEMENINO(2);
 
-	private final int valor;
+	private int valor;
+	private int ordinal;
 	
 	private GeneroOdataEnum(int valor) {
 		this.valor = valor;
@@ -33,5 +34,16 @@ public enum GeneroOdataEnum implements OdataEnum<GeneroOdataEnum>{
 			return GeneroEnum.MASCULINO;
 		
 		}
+	}
+
+	@Override
+	public int getOrdinal() {
+		return ordinal;
+	}
+
+	@Override
+	public GeneroOdataEnum setOrdinal(int ordinal) {
+		this.ordinal = ordinal;
+		return ordinal == 0 ? MASCULINO :  FEMENINO;
 	}
 }
