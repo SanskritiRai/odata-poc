@@ -3,16 +3,11 @@ package com.cairone.odataexample.services;
 import java.time.LocalDate;
 
 import javax.persistence.EntityManagerFactory;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
 import javax.transaction.Transactional;
-import javax.transaction.xa.XAResource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.atomikos.icatch.jta.UserTransactionManager;
 import com.cairone.odataexample.edm.resources.PrestamoPendienteEdm;
 import com.cairone.odataexample.entities.PersonaEntity;
 import com.cairone.odataexample.entities.PrestamoCuotaEntity;
@@ -23,7 +18,6 @@ import com.cairone.odataexample.repositories.PrestamoCuotaRepository;
 import com.cairone.odataexample.repositories.PrestamoRepository;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.transaction.HazelcastXAResource;
 import com.hazelcast.transaction.TransactionContext;
 import com.mysema.query.jpa.impl.JPAQuery;
 
@@ -34,7 +28,6 @@ public class PrestamoService {
 	public static final String CACHE_NAME_DESARROLLO = "PRESTAMOS-DESARROLLO";
 	
 	@Autowired private HazelcastInstance hazelcastInstance = null;
-	@Autowired private UserTransactionManager tm = null;
 	@Autowired private EntityManagerFactory entityManagerFactory;
 	
 	@Autowired private PersonaService personaService = null;
@@ -45,15 +38,11 @@ public class PrestamoService {
 	@Transactional
 	public PrestamoEntity aprobar(String clave) throws ServiceException {
 		
-		HazelcastXAResource xaResource = hazelcastInstance.getXAResource();
-		
 		try
 		{
-			Transaction transaction = tm.getTransaction();
-			transaction.enlistResource(xaResource);
-			
-			TransactionContext context = xaResource.getTransactionContext();
-			
+			TransactionContext context = hazelcastInstance.newTransactionContext();
+			context.beginTransaction();
+
 			TransactionalMap<String, PrestamoPendienteEdm> map = context.getMap(CACHE_NAME_PENDIENTES);
 			PrestamoPendienteEdm prestamoPendienteEdm = map.get(clave);
 			
@@ -98,11 +87,11 @@ public class PrestamoService {
 			});
 			
 			map.remove(clave);
-			transaction.delistResource(xaResource, XAResource.TMSUCCESS);
+			context.commitTransaction();
 			
 			return prestamoEntity;
 			
-		} catch(SystemException | IllegalStateException | RollbackException e) {
+		} catch(IllegalStateException e) {
 			throw new ServiceException(ServiceException.TRANSACION_API_EXCEPTION, e.getMessage());
 		}
 	}

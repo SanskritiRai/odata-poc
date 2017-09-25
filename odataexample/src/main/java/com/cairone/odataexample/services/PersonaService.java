@@ -2,10 +2,6 @@ package com.cairone.odataexample.services;
 
 import java.time.LocalDate;
 
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -34,7 +30,6 @@ import com.cairone.odataexample.repositories.PersonaSectorRepository;
 import com.cairone.odataexample.repositories.TipoDocumentoRepository;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.transaction.HazelcastXAResource;
 import com.hazelcast.transaction.TransactionContext;
 import com.mysema.query.types.expr.BooleanExpression;
 
@@ -240,23 +235,15 @@ public class PersonaService {
 		personaRepository.save(personaEntity);
 		
 		// **** ACTUALIZACION DE LA FOTO EN EL CACHE
+		TransactionContext context = hazelcastInstance.newTransactionContext();
+		context.beginTransaction();
 
-		HazelcastXAResource xaResource = hazelcastInstance.getXAResource();
-		
-		try
-		{
-			Transaction transaction = tm.getTransaction();
-			transaction.enlistResource(xaResource);
-			
-		} catch(SystemException | IllegalStateException | RollbackException e) {
-			throw new ServiceException(ServiceException.TRANSACION_API_EXCEPTION, e.getMessage());
-		}
-		
-		TransactionContext context = xaResource.getTransactionContext();
 		TransactionalMap<String, PersonaEntity> map = context.getMap(CACHE_NAME_PERSONA);
 
 		String key = String.format("%s-%s", personaEntity.getTipoDocumento().getId(), personaEntity.getNumeroDocumento());
 		map.put(key, personaEntity);
+		
+		context.commitTransaction();
 	}
 	
 	@Transactional @CachePut(cacheNames=CACHE_NAME_FOTO, key="#personaEntity.fotoUUID")
