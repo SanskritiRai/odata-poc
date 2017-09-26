@@ -9,7 +9,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.atomikos.icatch.jta.UserTransactionManager;
 import com.cairone.odataexample.dtos.PersonaFrmDto;
 import com.cairone.odataexample.entities.LocalidadEntity;
 import com.cairone.odataexample.entities.LocalidadPKEntity;
@@ -46,7 +45,6 @@ public class PersonaService {
 	@Autowired private TipoDocumentoRepository tipoDocumentoRepository = null;
 	
 	@Autowired private HazelcastInstance hazelcastInstance = null;
-	@Autowired private UserTransactionManager tm = null;
 	
 	@Transactional(readOnly=true) @Cacheable(cacheNames=CACHE_NAME_PERSONA, key="#tipoDocumentoId + '-' + #numeroDocumento")
 	public PersonaEntity buscarPorId(Integer tipoDocumentoId, String numeroDocumento) throws ServiceException {

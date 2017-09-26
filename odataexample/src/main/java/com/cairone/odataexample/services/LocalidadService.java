@@ -14,7 +14,6 @@ import com.cairone.odataexample.entities.ProvinciaEntity;
 import com.cairone.odataexample.entities.ProvinciaPKEntity;
 import com.cairone.odataexample.exceptions.ServiceException;
 import com.cairone.odataexample.repositories.LocalidadRepository;
-import com.cairone.odataexample.repositories.PaisRepository;
 import com.cairone.odataexample.repositories.ProvinciaRepository;
 
 @Service
@@ -22,7 +21,6 @@ public class LocalidadService {
 
 	public static final String CACHE_NAME = "LOCALIDADES";
 
-	@Autowired private PaisRepository paisRepository = null;
 	@Autowired private ProvinciaRepository provinciaRepository = null;
 	@Autowired private LocalidadRepository localidadRepository = null;
 
