@@ -10,6 +10,8 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +30,7 @@ import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 public class PaisDataSource extends AbstractDataSource {
 	
 	public static final String ENTITY_SET_NAME = "Paises";
+	private static final Logger LOG = LoggerFactory.getLogger(PaisDataSource.class);
 	
 	@Autowired private PaisService paisService = null;
 	@Autowired private PaisFrmDtoValidator paisFrmDtoValidator = null;
@@ -133,6 +136,8 @@ public class PaisDataSource extends AbstractDataSource {
 		
 		List<PaisEntity> paisEntities = JPQLQuery.execute(entityManager, query);
 		List<PaisEdm> paisEdms = paisEntities.stream().map(entity -> { return new PaisEdm(entity); }).collect(Collectors.toList());
+
+		LOG.debug("PAISES ENCONTRADOS: {}", paisEdms.size());
 		
 		Map<Integer, PaisEntity> map = hazelcastInstance.getMap(PaisService.CACHE_NAME);
 		map.putAll(paisEntities.stream().collect(Collectors.toMap(PaisEntity::getId, e -> e)));

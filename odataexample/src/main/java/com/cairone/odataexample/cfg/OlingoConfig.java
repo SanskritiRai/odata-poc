@@ -1,5 +1,7 @@
 package com.cairone.odataexample.cfg;
 
+import java.util.Date;
+
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +29,7 @@ public class OlingoConfig {
     @Bean
     public MediaProcessor getMediaProcessor() throws ODataApplicationException {
     	
-    	LOG.info("Configurando MEDIAPROCESSOR ...");
+    	LOG.debug("Configurando MEDIAPROCESSOR ...");
     	
     	MediaProcessor mediaProcessor = new MediaProcessor()
 	    	.setDefaultEdmPackage(OdataExample.DEFAULT_EDM_PACKAGE)
@@ -40,7 +42,7 @@ public class OlingoConfig {
     @Bean
     public ActionProcessor getActionProcessor() throws ODataApplicationException {
 
-    	LOG.info("Configurando ACTIONPROCESSOR ...");
+    	LOG.debug("Configurando ACTIONPROCESSOR ...");
     	
     	ActionProcessor processor = new ActionProcessor()
     		.setDefaultEdmPackage(OdataExample.DEFAULT_EDM_PACKAGE)
@@ -53,7 +55,7 @@ public class OlingoConfig {
     @Bean
     public BatchRequestProcessor getBatchRequestProcessor() {
 
-    	LOG.info("Configurando BATCHPROCESSOR ...");
+    	LOG.debug("Configurando BATCHPROCESSOR ...");
     	
     	BatchRequestProcessor processor = new BatchRequestProcessor();
     	return processor;
@@ -62,7 +64,7 @@ public class OlingoConfig {
     @Bean
     public EdmProvider getOdataexampleEdmProvider() throws ODataApplicationException {
 
-    	LOG.info("Configurando PROVIDER ...");
+    	LOG.debug("Configurando PROVIDER ...");
     	
     	EdmProvider provider = new EdmProvider()
     		.setContainerName(OdataExample.CONTAINER_NAME)
@@ -77,9 +79,11 @@ public class OlingoConfig {
     @Bean
     public ServletRegistrationBean dispatcherServletRegistration() {
 
-    	LOG.info("Configurando DISPATCHER ...");
+    	LOG.debug("Configurando DISPATCHER ...");
     	
     	ServletRegistrationBean registration = new ServletRegistrationBean(dispatcherServlet, "/odata/appexample.svc/*");
+    	LOG.debug("DISPATCHER LISTO {}", new Date());
+    	
     	return registration;
     }
 }

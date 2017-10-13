@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="OFF" packages="org.graylog2.log4j2">
+	<Appenders>
+		<Console name="ConsoleAppender" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d [%t] %highlight{%-5level}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} %logger{36} - %msg%n%throwable" />
+		</Console>
+ 
+		<GELF name="GraylogTcpAppender" server="192.168.1.222" port="12202" protocol="tcp">
+			<KeyValuePair key="jvm" value="${java:vm}"/>
+		</GELF>
+	</Appenders>
+
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="ConsoleAppender" />
+			<AppenderRef ref="GraylogTcpAppender" />
+		</Root>
+		<Logger name="com.cairone.odataexample" level="debug" additivity="false">
+	      <AppenderRef ref="ConsoleAppender" />
+	      <AppenderRef ref="GraylogTcpAppender" />
+	    </Logger>
+	</Loggers>
+</Configuration>
