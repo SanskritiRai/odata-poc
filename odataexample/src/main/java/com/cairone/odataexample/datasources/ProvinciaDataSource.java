@@ -10,6 +10,8 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +30,7 @@ import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 public class ProvinciaDataSource extends AbstractDataSource {
 	
 	public static final String ENTITY_SET_NAME = "Provincias";
+	private static final Logger LOG = LoggerFactory.getLogger(PaisDataSource.class);
 	
 	@Autowired private ProvinciaService provinciaService = null;
 	@Autowired private ProvinciaFrmDtoValidator provinciaFrmDtoValidator = null;
@@ -45,6 +48,7 @@ public class ProvinciaDataSource extends AbstractDataSource {
 				ProvinciaEntity provinciaEntity = provinciaService.nuevo(provinciaFrmDto);
 				return new ProvinciaEdm(provinciaEntity);
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
 		}
@@ -77,6 +81,7 @@ public class ProvinciaDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(provinciaFrmDtoValidator, messageSource, provinciaFrmDto);
 				return new ProvinciaEdm( provinciaService.actualizar(provinciaFrmDto) );
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
     	}
@@ -93,6 +98,7 @@ public class ProvinciaDataSource extends AbstractDataSource {
     	try {
 			provinciaService.borrar(paisID, provinciaID);
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
     	
@@ -117,6 +123,7 @@ public class ProvinciaDataSource extends AbstractDataSource {
 	    	
 	    	return provinciaEdm;
     	} catch (Exception e) {
+    		LOG.warn(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}

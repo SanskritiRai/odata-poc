@@ -48,6 +48,7 @@ public class PaisDataSource extends AbstractDataSource {
 				PaisEntity paisEntity = paisService.nuevo(paisFrmDto);
 				return new PaisEdm(paisEntity);
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
 		}
@@ -81,6 +82,7 @@ public class PaisDataSource extends AbstractDataSource {
 				
 				return new PaisEdm(paisEntity);
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
     	}
@@ -96,6 +98,7 @@ public class PaisDataSource extends AbstractDataSource {
     	try {
 			paisService.borrar(paisID);
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
     	
@@ -119,6 +122,7 @@ public class PaisDataSource extends AbstractDataSource {
 		
 			return paisEdm;
     	} catch (Exception e) {
+    		LOG.warn(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}

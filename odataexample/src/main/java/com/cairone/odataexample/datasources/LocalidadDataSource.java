@@ -10,6 +10,8 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +30,8 @@ import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 public class LocalidadDataSource extends AbstractDataSource {
 
 	public static final String ENTITY_SET_NAME = "Localidades";
-
+	private static final Logger LOG = LoggerFactory.getLogger(PaisDataSource.class);
+	
 	@Autowired private LocalidadService localidadService = null;
 	@Autowired private LocalidadFrmDtoValidator localidadFrmDtoValidator = null;
 			
@@ -45,6 +48,7 @@ public class LocalidadDataSource extends AbstractDataSource {
 				LocalidadEntity localidadEntity = localidadService.nuevo(localidadFrmDto);
 				return new LocalidadEdm(localidadEntity);
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
 		}
@@ -82,6 +86,7 @@ public class LocalidadDataSource extends AbstractDataSource {
     			return new LocalidadEdm( localidadEntity );
     			
     		} catch (Exception e) {
+    			LOG.error(e.getMessage(), e);
     			throw OdataExceptionParser.parse(e);
 			}
     	}
@@ -99,6 +104,7 @@ public class LocalidadDataSource extends AbstractDataSource {
     	try {
 			localidadService.borrar(paisID, provinciaID, localidadID);
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
     	
@@ -124,6 +130,7 @@ public class LocalidadDataSource extends AbstractDataSource {
 	    	
 	    	return localidadEdm;
     	} catch (Exception e) {
+    		LOG.warn(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}

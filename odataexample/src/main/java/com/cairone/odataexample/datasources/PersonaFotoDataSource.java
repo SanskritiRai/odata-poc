@@ -12,6 +12,8 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +32,7 @@ import com.google.common.base.CharMatcher;
 public class PersonaFotoDataSource extends AbstractDataSource implements MediaDataSource {
 	
 	public static final String ENTITY_SET_NAME = "PersonasFotos";
+	private static final Logger LOG = LoggerFactory.getLogger(PaisDataSource.class);
 	
 	@Autowired private PersonaService personaService = null;
 	
@@ -50,6 +53,7 @@ public class PersonaFotoDataSource extends AbstractDataSource implements MediaDa
 	    	
 	    	return foto;
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}
@@ -73,6 +77,7 @@ public class PersonaFotoDataSource extends AbstractDataSource implements MediaDa
 	    	PersonaEntity personaEntity = personaService.buscarPorFotoUUID(uuid);
 	    	personaService.actualizarFoto(personaEntity, binary);
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}
@@ -104,6 +109,7 @@ public class PersonaFotoDataSource extends AbstractDataSource implements MediaDa
 				
 				return personaFotoEdm;
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
 		}
@@ -120,6 +126,7 @@ public class PersonaFotoDataSource extends AbstractDataSource implements MediaDa
     		personaService.quitarFoto(uuid);
     		return null;
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}
@@ -141,6 +148,7 @@ public class PersonaFotoDataSource extends AbstractDataSource implements MediaDa
 	    	return personaFotoEdm;
 	    	
 		} catch (Exception e) {
+			LOG.warn(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}
@@ -163,6 +171,7 @@ public class PersonaFotoDataSource extends AbstractDataSource implements MediaDa
 			try {
 				personaEntity = personaService.buscarPorFotoUUID(entity.getUuid());
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				//FIXME
 				personaEntity = null;
 			}

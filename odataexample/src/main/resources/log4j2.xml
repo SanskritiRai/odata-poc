@@ -1,4 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+    	<Console name="ConsoleAppender" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d [%t] %highlight{%-5level}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} %logger{36} - %msg%n%throwable" />
+		</Console>
+        <Gelf name="GraylogHttpAppender" host="http://192.168.1.222:12202/gelf" port="12202" version="1.0" extractStackTrace="true"
+              filterStackTrace="true" mdcProfiling="true" includeFullMdc="true" maximumMessageSize="8192" 
+              originHost="EQ016.eivsoftware.net" ignoreExceptions="true">
+              
+            <Field name="timestamp" pattern="%d{dd MMM yyyy HH:mm:ss,SSS}" />
+            <Field name="level" pattern="%level" />
+            <Field name="simpleClassName" pattern="%C{1}" />
+            <Field name="className" pattern="%C" />
+            <Field name="server" pattern="%host" />
+            <Field name="server.fqdn" pattern="%host{fqdn}" />
+            <Field name="developer" literal="DIEGO-CAIRONE" />
+            <Field name="appName" literal="ODATAEXAMPLE-OLINGO" />
+        </Gelf>
+    </Appenders>
+    <Loggers>
+		<Root level="info">
+			<AppenderRef ref="ConsoleAppender" />
+			<AppenderRef ref="GraylogHttpAppender" />
+		</Root>
+		<Logger name="com.cairone.odataexample" level="debug" additivity="false">
+	      <AppenderRef ref="ConsoleAppender" />
+	      <AppenderRef ref="GraylogHttpAppender" />
+	    </Logger>
+	</Loggers>
+    
+</Configuration>
+
+<!-- 
 <Configuration status="OFF" packages="org.graylog2.log4j2">
 	<Appenders>
 		<Console name="ConsoleAppender" target="SYSTEM_OUT">
@@ -21,3 +54,4 @@
 	    </Logger>
 	</Loggers>
 </Configuration>
+ -->

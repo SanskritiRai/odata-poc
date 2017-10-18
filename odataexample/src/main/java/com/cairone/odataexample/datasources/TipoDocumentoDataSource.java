@@ -10,6 +10,8 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +30,8 @@ import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 public class TipoDocumentoDataSource extends AbstractDataSource {
 
 	public static final String ENTITY_SET_NAME = "TiposDocumentos";
-
+	private static final Logger LOG = LoggerFactory.getLogger(PaisDataSource.class);
+	
 	@Autowired private TipoDocumentoService tipoDocumentoService = null;
 	@Autowired private TipoDocumentoFrmDtoValidator tipoDocumentoFrmDtoValidator = null;
 	
@@ -45,6 +48,7 @@ public class TipoDocumentoDataSource extends AbstractDataSource {
 				TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoService.nuevo(tipoDocumentoFrmDto);
 				return new TipoDocumentoEdm(tipoDocumentoEntity);
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
 		}
@@ -76,6 +80,7 @@ public class TipoDocumentoDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(tipoDocumentoFrmDtoValidator, messageSource, tipoDocumentoFrmDto);
 				return new TipoDocumentoEdm( tipoDocumentoService.actualizar(tipoDocumentoFrmDto) );
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
     	}
@@ -91,6 +96,7 @@ public class TipoDocumentoDataSource extends AbstractDataSource {
     	try {
     		tipoDocumentoService.borrar(tipoDocumentoID);
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
     	
@@ -114,6 +120,7 @@ public class TipoDocumentoDataSource extends AbstractDataSource {
 			
 			return tipoDocumentoEdm;
 		} catch (Exception e) {
+			LOG.warn(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}	
 	}

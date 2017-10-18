@@ -12,6 +12,8 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +34,8 @@ import com.cairone.olingo.ext.jpa.query.JPQLQueryBuilder;
 public class SectorDataSource extends AbstractDataSource {
 
 	public static final String ENTITY_SET_NAME = "Sectores";
-
+	private static final Logger LOG = LoggerFactory.getLogger(PaisDataSource.class);
+	
 	@Autowired private SectorService sectorService = null;
 	@Autowired private SectorFrmDtoValidator sectorFrmDtoValidator = null;
 
@@ -49,6 +52,7 @@ public class SectorDataSource extends AbstractDataSource {
 				SectorEntity sectorEntity = sectorService.nuevo(sectorFrmDto);
 				return new SectorEdm(sectorEntity);
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
 		}
@@ -79,6 +83,7 @@ public class SectorDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(sectorFrmDtoValidator, messageSource, sectorFrmDto);
 				return new SectorEdm( sectorService.actualizar(sectorFrmDto) );
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
     	}
@@ -94,6 +99,7 @@ public class SectorDataSource extends AbstractDataSource {
     	try {
     		sectorService.borrar(sectorID);
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			String message = SQLExceptionParser.parse(e);
 			throw new ODataApplicationException(message, HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
 		}
@@ -118,6 +124,7 @@ public class SectorDataSource extends AbstractDataSource {
 			
 			return sectorEdm;
 		} catch (Exception e) {
+			LOG.warn(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}

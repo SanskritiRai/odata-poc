@@ -10,6 +10,8 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +33,7 @@ import com.google.common.base.CharMatcher;
 public class PersonaDataSource extends AbstractDataSource {
 
 	public static final String ENTITY_SET_NAME = "Personas";
+	private static final Logger LOG = LoggerFactory.getLogger(PaisDataSource.class);
 	
 	@Autowired private PersonaService personaService = null;
 	@Autowired private LocalidadService localidadService = null;
@@ -49,6 +52,7 @@ public class PersonaDataSource extends AbstractDataSource {
 				PersonaEntity personaEntity = personaService.nuevo(personaFrmDto);
 				return new PersonaEdm(personaEntity);
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
 		}
@@ -97,6 +101,7 @@ public class PersonaDataSource extends AbstractDataSource {
 				
 				return new PersonaEdm(personaEntity);
 			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
 			}
     	}
@@ -113,6 +118,7 @@ public class PersonaDataSource extends AbstractDataSource {
     	try {
 			personaService.borrar(tipoDocumentoID, numeroDocumento);
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
     	
@@ -137,6 +143,7 @@ public class PersonaDataSource extends AbstractDataSource {
 	    	
 	    	return personaEdm;
 		} catch (Exception e) {
+			LOG.warn(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}

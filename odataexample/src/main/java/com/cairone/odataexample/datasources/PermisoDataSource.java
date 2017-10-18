@@ -10,6 +10,8 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.FilterOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +28,8 @@ import com.google.common.base.CharMatcher;
 public class PermisoDataSource extends AbstractDataSource {
 
 	public static final String ENTITY_SET_NAME = "Permisos";
-
+	private static final Logger LOG = LoggerFactory.getLogger(PaisDataSource.class);
+	
 	@Autowired private PermisoService permisoService = null;
 
 	@Override
@@ -61,6 +64,7 @@ public class PermisoDataSource extends AbstractDataSource {
 			
 			return permisoEdm;
 		} catch (Exception e) {
+			LOG.warn(e.getMessage(), e);
 			throw OdataExceptionParser.parse(e);
 		}
 	}
