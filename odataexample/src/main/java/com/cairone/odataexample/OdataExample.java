@@ -6,7 +6,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.web.SpringBootServletInitializer;
 
 @SpringBootApplication
-public class OdataExample extends SpringBootServletInitializer
+public class OdataExample extends SpringBootServletInitializer 
 {
 	public static final String NAME_SPACE = "com.cairone.odataexample";
 	public static final String CONTAINER_NAME = "ODataExample";
