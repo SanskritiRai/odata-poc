@@ -1,0 +1,14 @@
+
+filebeat.prospectors:
+
+- input_type: log
+
+  paths:
+    - C:/Users/diego.cairone/git/odataexample-olingo/odataexample/target/odataexample-app.log
+  fields:
+    appName: ODATAEXAMPLE_OLINGO
+    customer: EIV_SOFTWARE-EQ016
+
+#----------------------------- Logstash output --------------------------------
+output.logstash:
+  hosts: ["localhost:5044"]

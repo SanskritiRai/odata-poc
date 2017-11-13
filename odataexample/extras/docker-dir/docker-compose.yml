@@ -1,0 +1,52 @@
+version: '2'
+services:
+  elk-elasticsearch564:
+    image: elasticsearch:5.6.4
+    container_name: elk_elasticsearch564
+    volumes:
+      - elk-elasticsearch564_data:/usr/share/elasticsearch/data/
+    environment:
+      - bootstrap.memory_lock=true
+      - cluster.name=docker-cluster
+      - path.data=/tmp/elasticsearch
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+      - network.host=0.0.0.0
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    mem_limit: 1g
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+  elk-kibana564:
+    image: kibana:5.6.4
+    container_name: elk_kibana564
+    ports:
+      - "5601:5601"
+    links:
+      - elk-elasticsearch564:elasticsearch
+    depends_on:
+      - elk-elasticsearch564
+  elk-logstash564:
+    image: logstash-sendmail:5.6.4
+    container_name: elk_logstash564
+    ports:
+      - "5044:5044"
+    command: "-f /config-dir/logstash.conf"
+    volumes:
+      - C:/Users/diego.cairone/git/odataexample-olingo/odataexample/extras/logstash-dir/:/config-dir
+    links:
+      - elk-elasticsearch564:elasticsearch
+    depends_on:
+      - elk-elasticsearch564
+
+volumes:
+  elk-elasticsearch564_data:
+ 
