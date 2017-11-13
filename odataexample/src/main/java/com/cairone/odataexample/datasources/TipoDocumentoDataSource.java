@@ -20,6 +20,7 @@ import com.cairone.odataexample.dtos.validators.TipoDocumentoFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.TipoDocumentoEdm;
 import com.cairone.odataexample.entities.TipoDocumentoEntity;
 import com.cairone.odataexample.exceptions.ODataBadRequestException;
+import com.cairone.odataexample.exceptions.ValidationException;
 import com.cairone.odataexample.services.TipoDocumentoService;
 import com.cairone.odataexample.utils.OdataExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
@@ -47,6 +48,9 @@ public class TipoDocumentoDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(tipoDocumentoFrmDtoValidator, messageSource, tipoDocumentoFrmDto);
 				TipoDocumentoEntity tipoDocumentoEntity = tipoDocumentoService.nuevo(tipoDocumentoFrmDto);
 				return new TipoDocumentoEdm(tipoDocumentoEntity);
+			} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -79,6 +83,9 @@ public class TipoDocumentoDataSource extends AbstractDataSource {
     		
 				ValidatorUtil.validate(tipoDocumentoFrmDtoValidator, messageSource, tipoDocumentoFrmDto);
 				return new TipoDocumentoEdm( tipoDocumentoService.actualizar(tipoDocumentoFrmDto) );
+    		} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -120,7 +127,7 @@ public class TipoDocumentoDataSource extends AbstractDataSource {
 			
 			return tipoDocumentoEdm;
 		} catch (Exception e) {
-			LOG.warn(e.getMessage(), e);
+			LOG.warn(e.getMessage());
 			throw OdataExceptionParser.parse(e);
 		}	
 	}

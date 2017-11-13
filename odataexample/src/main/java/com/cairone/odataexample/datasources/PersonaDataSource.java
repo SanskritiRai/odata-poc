@@ -21,6 +21,7 @@ import com.cairone.odataexample.edm.resources.PersonaEdm;
 import com.cairone.odataexample.entities.LocalidadEntity;
 import com.cairone.odataexample.entities.PersonaEntity;
 import com.cairone.odataexample.exceptions.ODataBadRequestException;
+import com.cairone.odataexample.exceptions.ValidationException;
 import com.cairone.odataexample.services.LocalidadService;
 import com.cairone.odataexample.services.PersonaService;
 import com.cairone.odataexample.utils.OdataExceptionParser;
@@ -51,6 +52,9 @@ public class PersonaDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(personaFrmDtoValidator, messageSource, personaFrmDto);
 				PersonaEntity personaEntity = personaService.nuevo(personaFrmDto);
 				return new PersonaEdm(personaEntity);
+			} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -100,6 +104,9 @@ public class PersonaDataSource extends AbstractDataSource {
 				personaEntity = personaService.actualizar(personaFrmDto);
 				
 				return new PersonaEdm(personaEntity);
+    		} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -143,7 +150,7 @@ public class PersonaDataSource extends AbstractDataSource {
 	    	
 	    	return personaEdm;
 		} catch (Exception e) {
-			LOG.warn(e.getMessage(), e);
+			LOG.warn(e.getMessage());
 			throw OdataExceptionParser.parse(e);
 		}
 	}

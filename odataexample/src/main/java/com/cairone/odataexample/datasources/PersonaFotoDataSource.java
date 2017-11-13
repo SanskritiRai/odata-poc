@@ -148,7 +148,7 @@ public class PersonaFotoDataSource extends AbstractDataSource implements MediaDa
 	    	return personaFotoEdm;
 	    	
 		} catch (Exception e) {
-			LOG.warn(e.getMessage(), e);
+			LOG.warn(e.getMessage());
 			throw OdataExceptionParser.parse(e);
 		}
 	}

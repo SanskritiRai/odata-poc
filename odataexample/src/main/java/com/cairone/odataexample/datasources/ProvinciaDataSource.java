@@ -20,6 +20,7 @@ import com.cairone.odataexample.dtos.validators.ProvinciaFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.ProvinciaEdm;
 import com.cairone.odataexample.entities.ProvinciaEntity;
 import com.cairone.odataexample.exceptions.ODataBadRequestException;
+import com.cairone.odataexample.exceptions.ValidationException;
 import com.cairone.odataexample.services.ProvinciaService;
 import com.cairone.odataexample.utils.OdataExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
@@ -47,6 +48,9 @@ public class ProvinciaDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(provinciaFrmDtoValidator, messageSource, provinciaFrmDto);
 				ProvinciaEntity provinciaEntity = provinciaService.nuevo(provinciaFrmDto);
 				return new ProvinciaEdm(provinciaEntity);
+			} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -80,6 +84,9 @@ public class ProvinciaDataSource extends AbstractDataSource {
     		
 				ValidatorUtil.validate(provinciaFrmDtoValidator, messageSource, provinciaFrmDto);
 				return new ProvinciaEdm( provinciaService.actualizar(provinciaFrmDto) );
+    		} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -123,7 +130,7 @@ public class ProvinciaDataSource extends AbstractDataSource {
 	    	
 	    	return provinciaEdm;
     	} catch (Exception e) {
-    		LOG.warn(e.getMessage(), e);
+    		LOG.warn(e.getMessage());
 			throw OdataExceptionParser.parse(e);
 		}
 	}

@@ -22,6 +22,7 @@ import com.cairone.odataexample.dtos.validators.SectorFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.SectorEdm;
 import com.cairone.odataexample.entities.SectorEntity;
 import com.cairone.odataexample.exceptions.ODataBadRequestException;
+import com.cairone.odataexample.exceptions.ValidationException;
 import com.cairone.odataexample.services.ProvinciaService;
 import com.cairone.odataexample.services.SectorService;
 import com.cairone.odataexample.utils.OdataExceptionParser;
@@ -51,6 +52,9 @@ public class SectorDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(sectorFrmDtoValidator, messageSource, sectorFrmDto);
 				SectorEntity sectorEntity = sectorService.nuevo(sectorFrmDto);
 				return new SectorEdm(sectorEntity);
+			} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -82,6 +86,9 @@ public class SectorDataSource extends AbstractDataSource {
     		
 				ValidatorUtil.validate(sectorFrmDtoValidator, messageSource, sectorFrmDto);
 				return new SectorEdm( sectorService.actualizar(sectorFrmDto) );
+    		} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -124,7 +131,7 @@ public class SectorDataSource extends AbstractDataSource {
 			
 			return sectorEdm;
 		} catch (Exception e) {
-			LOG.warn(e.getMessage(), e);
+			LOG.warn(e.getMessage());
 			throw OdataExceptionParser.parse(e);
 		}
 	}

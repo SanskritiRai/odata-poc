@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+    	<Console name="ConsoleAppender" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d [%t] %highlight{%-5level}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} %logger{36} - %msg%n%throwable" />
+		</Console>
+		<File name="FileAppender" fileName="target/odataexample-app.log" >
+			<PatternLayout pattern="%d [%t] {%-5level} %logger{36} - %msg%n%throwable" />
+		</File>
+		<Gelf name="GraylogHttpAppender" host="http://192.168.1.222:12202/gelf" port="12202" version="1.0" extractStackTrace="true"
+              filterStackTrace="true" mdcProfiling="true" includeFullMdc="true" maximumMessageSize="8192" 
+              originHost="EQ016.eivsoftware.net" ignoreExceptions="true">
+              
+            <Field name="timestamp" pattern="%d{dd MMM yyyy HH:mm:ss,SSS-0300}" />
+            <Field name="severityLevel" pattern="%level" />
+            <Field name="logLevel" pattern="%p" />
+            <Field name="simpleClassName" pattern="%C{1}" />
+            <Field name="className" pattern="%C" />
+            <Field name="classMethod" pattern="%M" />
+            <Field name="lineNumber" pattern="%l" />
+            <Field name="server" pattern="%host" />
+            <Field name="server.fqdn" pattern="%host{fqdn}" />
+            <Field name="customer" literal="EIV_SOFTWARE-EQ016" />
+            <Field name="appName" literal="ODATAEXAMPLE_OLINGO" />
+            
+            <!-- 
+				0       Emergency: system is unusable
+				1       Alert: action must be taken immediately
+				2       Critical: critical conditions
+				3       Error: error conditions
+				4       Warning: warning conditions
+				5       Notice: normal but significant condition
+				6       Informational: informational messages
+				7       Debug: debug-level messages
+             -->
+            <Filters>
+		        <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY" />
+		    </Filters>
+        </Gelf>
+    </Appenders>
+    
+    <Loggers>
+		<Root level="info">
+			<AppenderRef ref="ConsoleAppender" />
+			<AppenderRef ref="FileAppender" />
+			<AppenderRef ref="GraylogHttpAppender" />
+		</Root>
+	</Loggers>
+    
+</Configuration>

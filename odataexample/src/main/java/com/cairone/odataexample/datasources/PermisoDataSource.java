@@ -64,7 +64,7 @@ public class PermisoDataSource extends AbstractDataSource {
 			
 			return permisoEdm;
 		} catch (Exception e) {
-			LOG.warn(e.getMessage(), e);
+			LOG.warn(e.getMessage());
 			throw OdataExceptionParser.parse(e);
 		}
 	}

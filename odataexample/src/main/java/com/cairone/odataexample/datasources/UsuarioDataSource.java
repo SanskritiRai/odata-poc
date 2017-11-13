@@ -20,6 +20,7 @@ import com.cairone.odataexample.dtos.validators.UsuarioFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.UsuarioEdm;
 import com.cairone.odataexample.entities.UsuarioEntity;
 import com.cairone.odataexample.exceptions.ODataBadRequestException;
+import com.cairone.odataexample.exceptions.ValidationException;
 import com.cairone.odataexample.services.UsuarioService;
 import com.cairone.odataexample.utils.OdataExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
@@ -48,6 +49,9 @@ public class UsuarioDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(usuarioFrmDtoValidator, messageSource, usuarioFrmDto);
 				UsuarioEntity usuarioEntity = usuarioService.nuevo(usuarioFrmDto);
 				return new UsuarioEdm(usuarioEntity);
+			} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -85,6 +89,9 @@ public class UsuarioDataSource extends AbstractDataSource {
     		
 				ValidatorUtil.validate(usuarioFrmDtoValidator, messageSource, usuarioFrmDto);
 				return new UsuarioEdm( usuarioService.actualizar(usuarioFrmDto) );
+    		} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -128,7 +135,7 @@ public class UsuarioDataSource extends AbstractDataSource {
 			
 			return usuarioEdm;
 		} catch (Exception e) {
-			LOG.warn(e.getMessage(), e);
+			LOG.warn(e.getMessage());
 			throw OdataExceptionParser.parse(e);
 		}
 	}

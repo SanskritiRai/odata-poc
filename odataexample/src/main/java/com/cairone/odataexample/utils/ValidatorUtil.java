@@ -6,6 +6,8 @@ import org.springframework.validation.DataBinder;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.Validator;
 
+import com.cairone.odataexample.exceptions.ValidationException;
+
 public class ValidatorUtil {
 
 	public static void validate(Validator validator, MessageSource messageSource, Object entityToValidate) throws Exception {
@@ -23,7 +25,7 @@ public class ValidatorUtil {
 			    if(object instanceof FieldError) {
 			        FieldError fieldError = (FieldError) object;
 			        String message = messageSource.getMessage(fieldError, null);
-			        throw new Exception(
+			        throw new ValidationException(
 			        		String.format("HAY DATOS INVALIDOS EN LA SOLICITUD ENVIADA. %s", message));
 			    }
 			}

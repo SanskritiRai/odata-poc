@@ -20,6 +20,7 @@ import com.cairone.odataexample.dtos.validators.LocalidadFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.LocalidadEdm;
 import com.cairone.odataexample.entities.LocalidadEntity;
 import com.cairone.odataexample.exceptions.ODataBadRequestException;
+import com.cairone.odataexample.exceptions.ValidationException;
 import com.cairone.odataexample.services.LocalidadService;
 import com.cairone.odataexample.utils.OdataExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
@@ -47,6 +48,9 @@ public class LocalidadDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(localidadFrmDtoValidator, messageSource, localidadFrmDto);
 				LocalidadEntity localidadEntity = localidadService.nuevo(localidadFrmDto);
 				return new LocalidadEdm(localidadEntity);
+			} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -85,9 +89,12 @@ public class LocalidadDataSource extends AbstractDataSource {
     			
     			return new LocalidadEdm( localidadEntity );
     			
-    		} catch (Exception e) {
-    			LOG.error(e.getMessage(), e);
-    			throw OdataExceptionParser.parse(e);
+    		} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
+			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
+				throw OdataExceptionParser.parse(e);
 			}
     	}
     	
@@ -130,7 +137,7 @@ public class LocalidadDataSource extends AbstractDataSource {
 	    	
 	    	return localidadEdm;
     	} catch (Exception e) {
-    		LOG.warn(e.getMessage(), e);
+    		LOG.warn(e.getMessage());
 			throw OdataExceptionParser.parse(e);
 		}
 	}

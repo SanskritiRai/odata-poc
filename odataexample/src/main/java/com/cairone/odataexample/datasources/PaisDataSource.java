@@ -20,6 +20,7 @@ import com.cairone.odataexample.dtos.validators.PaisFrmDtoValidator;
 import com.cairone.odataexample.edm.resources.PaisEdm;
 import com.cairone.odataexample.entities.PaisEntity;
 import com.cairone.odataexample.exceptions.ODataBadRequestException;
+import com.cairone.odataexample.exceptions.ValidationException;
 import com.cairone.odataexample.services.PaisService;
 import com.cairone.odataexample.utils.OdataExceptionParser;
 import com.cairone.odataexample.utils.ValidatorUtil;
@@ -47,6 +48,9 @@ public class PaisDataSource extends AbstractDataSource {
 				ValidatorUtil.validate(paisFrmDtoValidator, messageSource, paisFrmDto);
 				PaisEntity paisEntity = paisService.nuevo(paisFrmDto);
 				return new PaisEdm(paisEntity);
+			} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -81,6 +85,9 @@ public class PaisDataSource extends AbstractDataSource {
 				paisEntity = paisService.actualizar(paisFrmDto);
 				
 				return new PaisEdm(paisEntity);
+    		} catch (ValidationException e) {
+				LOG.warn(e.getMessage());
+				throw new ODataBadRequestException(e.getMessage());
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 				throw OdataExceptionParser.parse(e);
@@ -117,12 +124,16 @@ public class PaisDataSource extends AbstractDataSource {
 		
 		try
     	{
+			LOG.debug("BUSCANDO PAIS CON ID {}", paisID);
+			
 			PaisEntity paisEntity = paisService.buscarPorID(paisID);
+			LOG.debug("PAIS ENCONTRADO: {}", paisEntity);
+			
 			PaisEdm paisEdm = new PaisEdm(paisEntity);
 		
 			return paisEdm;
     	} catch (Exception e) {
-    		LOG.warn(e.getMessage(), e);
+    		LOG.warn(e.getMessage());
 			throw OdataExceptionParser.parse(e);
 		}
 	}
@@ -141,8 +152,6 @@ public class PaisDataSource extends AbstractDataSource {
 		List<PaisEntity> paisEntities = JPQLQuery.execute(entityManager, query);
 		List<PaisEdm> paisEdms = paisEntities.stream().map(entity -> { return new PaisEdm(entity); }).collect(Collectors.toList());
 
-		LOG.debug("PAISES ENCONTRADOS: {}", paisEdms.size());
-		
 		Map<Integer, PaisEntity> map = hazelcastInstance.getMap(PaisService.CACHE_NAME);
 		map.putAll(paisEntities.stream().collect(Collectors.toMap(PaisEntity::getId, e -> e)));
 		
