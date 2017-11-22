@@ -8,6 +8,12 @@ filebeat.prospectors:
   fields:
     appName: ODATAEXAMPLE_OLINGO
     customer: EIV_SOFTWARE-EQ016
+ 
+  multiline:
+    pattern: '^\[%{TIMESTAMP_ISO8601:TIMESTAMP}\]'
+    negate: true
+  #The after setting is equivalent to previous in Logstash
+    match: after
 
 #----------------------------- Logstash output --------------------------------
 output.logstash:

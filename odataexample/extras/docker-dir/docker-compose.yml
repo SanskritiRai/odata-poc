@@ -35,13 +35,14 @@ services:
     depends_on:
       - elk-elasticsearch564
   elk-logstash564:
-    image: logstash-sendmail:5.6.4
+    image: logstash-notify:5.6.4
     container_name: elk_logstash564
     ports:
       - "5044:5044"
     command: "-f /config-dir/logstash.conf"
     volumes:
       - C:/Users/diego.cairone/git/odataexample-olingo/odataexample/extras/logstash-dir/:/config-dir
+      - C:/Users/diego.cairone/git/odataexample-olingo/odataexample/target/log-file/:/log-file
     links:
       - elk-elasticsearch564:elasticsearch
     depends_on:
