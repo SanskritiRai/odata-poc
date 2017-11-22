@@ -27,6 +27,7 @@ public class DatabaseConfigBuilderMssql extends DatabaseConfigAbstractBuilder {
 		ds.setXaDataSource(xaDataSource);
 		ds.setUniqueResourceName(uniqueResourceName);
 		ds.setPoolSize(poolSize);
+		ds.setTestQuery("select 1");
 		
 		return ds;
 	}	
